@@ -1,0 +1,14 @@
+{
+  "name": "cfa-last-mile-backend",
+  "version": "1.0.0",
+  "description": "Backend Code For computing for all last mile summer 2023 project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "CFA",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
