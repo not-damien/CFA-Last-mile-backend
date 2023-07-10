@@ -38,3 +38,16 @@ app.get('/logout', (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
+
+/*
+Passwords should be 8-20 characters in length
+Must contain at least 1 number, 1 uppercase letter, 1 lowercase letter, and 1 symbol: !@#$%^&*~?
+Must not repeat the same character more than 3 times in a row
+Symbols not allowed: <>"='{}`()
+
+*/
+function isPasswordValidFormat(thePassword){
+  //todo currently only validates length
+    return thePassword.length >= 8 && thePassword.length <= 20;
+      
+}
