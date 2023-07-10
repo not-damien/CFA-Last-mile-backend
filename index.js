@@ -13,6 +13,14 @@ app.get('/', (req, res) => {
 })
 
 app.post('/login',(req,res)=>{
+    const EMAIL = req.body.email
+    const PASSWORD = req.body.password
+    if( !isStringProvided(EMAIL) || !isStringProvided(PASSWORD)){
+      //todo
+      //send error code missing email or password 
+      res.status(400).send({
+        message: "Missing required information"
+    })}
     //todo
     //sanitize 
 
@@ -23,7 +31,28 @@ app.post('/login',(req,res)=>{
 })
 
 
+/*  EXAMPLE BODY For register http
+      {
+        "FNAME":"Damien",
+        "LNAME":"Cruz",
+        "email":"Damien@fake.email",
+        "password":"test12345"
+      }
+*/
 app.post('/register',(req,res)=>{
+  const FNAME = req.body.fname
+  const LNAME = req.body.lname
+  const EMAIL = req.body.email
+  const PASSWORD = req.body.password
+    if( !isStringProvided(EMAIL) || !isStringProvided(PASSWORD) || !isStringProvided(FNAME) || !isStringProvided(LNAME)){
+      //send error code missing email or password 
+      res.status(400).send({
+        message: "Missing required information"
+    })}
+  if(!isPasswordValidFormat(thePassword)){
+    res.status(400).send({
+      message: "Password is not formated Properly"
+  })}
   //todo
   //sanitize 
 
@@ -44,6 +73,31 @@ app.get('/logout', (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
+
+
+
+
+
+
+// helper functions
+
+/**
+ * checks if a string param has been provided
+ * @param {*} str 
+ */
+function isStringProvided(str){
+  str !== undefined && str.length > 0
+}
+
+
+
+
+
+
+
+
+
+
 
 /*
 Passwords should be 8-20 characters in length
@@ -84,6 +138,6 @@ function hasRequiredCharacters(str) {
     uppercaseRegex.test(str) &&
     lowercaseRegex.test(str) &&
     symbolRegex.test(str) &&
-    !forbiddenSymbolsRegex
+    !forbiddenSymbolsRegex.test(str)
   );
 }
