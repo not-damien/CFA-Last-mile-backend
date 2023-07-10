@@ -12,6 +12,15 @@ app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
+
+
+/*  EXAMPLE BODY For login http
+      {
+        "email":"Damien@fake.email",
+        "password":"test12345"
+      }
+*/
+
 app.post('/login',(req,res)=>{
     const EMAIL = req.body.email
     const PASSWORD = req.body.password
@@ -73,6 +82,33 @@ app.get('/logout', (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
+
+
+
+
+async function sendRegitrationToDb(EMAIL, PASSWORD){
+  try {
+    //todo connect to db 
+    //post collection.insertOne({email:EMAIL, password:PASSWORD})
+  } catch (error) {
+    //send 500 error
+  }finally{
+    //unconnect from db
+  }
+}
+
+
+
+//db functions 
+
+
+
+
+
+
+
+
+
 
 
 
