@@ -1,6 +1,12 @@
-const express = require('express')
-const app = express()
+require('dotenv').config();
+const express = require('express') 
+const cors = require('cors') 
 const port = 3000
+const app = express()
+
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
+
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
