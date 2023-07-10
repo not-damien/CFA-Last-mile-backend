@@ -53,7 +53,37 @@ Symbols not allowed: <>"='{}`()
 
 */
 function isPasswordValidFormat(thePassword){
-  //todo currently only validates length
-    return thePassword.length >= 8 && thePassword.length <= 20;
+    return (thePassword.length >= 8 && thePassword.length <= 20 &&
+           !hasThreeConsecutiveLetters(thePassword) &&
+           hasRequiredCharacters(thePassword));
+
       
+}
+
+
+function hasThreeConsecutiveLetters(str) {
+  for (let i = 0; i < str.length - 2; i++) {
+    if (str[i] === str[i + 1] && str[i + 1] === str[i + 2]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function hasRequiredCharacters(str) {
+  const numberRegex = /\d/;
+  const uppercaseRegex = /[A-Z]/;
+  const lowercaseRegex = /[a-z]/;
+  const symbolRegex = /[!@#$%^&*~?]/;
+  const forbiddenSymbolsRegex = /[<>"='{}()`]/;
+
+
+  
+  return (
+    numberRegex.test(str) &&
+    uppercaseRegex.test(str) &&
+    lowercaseRegex.test(str) &&
+    symbolRegex.test(str) &&
+    !forbiddenSymbolsRegex
+  );
 }
