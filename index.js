@@ -3,6 +3,7 @@ const express = require('express')
 const cors = require('cors') 
 const port = 3000
 const app = express()
+app.use(express.json())
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
@@ -33,11 +34,13 @@ app.post('/login',(req,res)=>{
     const EMAIL = req.body.email
     const PASSWORD = req.body.password
     if( !isStringProvided(EMAIL) || !isStringProvided(PASSWORD)){
-      //todo
       //send error code missing email or password 
       res.status(400).send({
         message: "Missing required information"
-    })}
+    })}else{
+      res.send(200)
+    }
+
     //todo
     //sanitize 
 
@@ -50,10 +53,10 @@ app.post('/login',(req,res)=>{
 
 /*  EXAMPLE BODY For register http
       {
-        "FNAME":"Damien",
-        "LNAME":"Cruz",
+        "fname":"Damien",
+        "lname":"Cruz",
         "email":"Damien@fake.email",
-        "password":"test12345"
+        "password":"@Test12345"
       }
 */
 app.post('/register',(req,res)=>{
@@ -65,11 +68,18 @@ app.post('/register',(req,res)=>{
       //send error code missing email or password 
       res.status(400).send({
         message: "Missing required information"
-    })}
-  if(!isPasswordValidFormat(thePassword)){
-    res.status(400).send({
-      message: "Password is not formated Properly"
-  })}
+    })}else if(!isPasswordValidFormat(PASSWORD)){
+      res.status(400).send({
+        message: "Password is not formated Properly"
+    })}else{
+      res.status(200).send({
+        message: "ok"
+      })
+    }
+
+
+
+
   //todo
   //sanitize 
 
@@ -79,10 +89,84 @@ app.post('/register',(req,res)=>{
   //on failure seend approprate error message and dont update database
 })
 
+/*
+{
+  email:"damien@example.com",
+  currentpassword:"@Test12345",
+  newpassword: "@Computer123"
+}
+
+*/
+
+
+app.post('/changepassword',(req,res)=>{
+  const EMAIL = req.body.email;
+  const CURRENT_PASSWORD = req.body.currentpassword;
+  const NEW_PASWORD = req.body.newpassword;
+  if(CURRENT_PASSWORD == NEW_PASWORD){
+    res.status(400).send({
+      message: "New Password Cannot Match Old Password"
+    })
+  }else if(isPasswordValidFormat(NEW_PASWORD)){
+    //also check if old password is correct for email
+    //Hash and salt new password and set it as the users password
+    res.sendStatus(200)
+  }else{
+    res.sendStatus(400)
+  }
+})
+
+
+
 
 app.get('/logout', (req, res) => {
   res.send('Logged Out')
 })
+
+
+/*
+example bodyy 
+{
+  jobname: 'UX Developer Needed',
+  pay: 500,
+  catagories, ["Web Design","UI/ UX Design"],
+  discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
+}
+*/
+app.post('/creategig',(req,res)=>{
+  res.status(500).send('Not Te implemented')
+})
+
+
+
+/*
+{
+  email: "DamienCruz@computingforall.com",
+  password: "fakepassword",
+  gigid: "123456",  //each gig should have a uniqe id 
+
+}
+*/
+
+app.delete('/deletegig',(req,res)=>{
+  const EMAIL = req.body.email
+  const PASSWORD = req.body.password
+  //todo 
+  //verfiy password/email match the one tied to the gig
+  //on sucsess send 200 and delete 
+  //on fail send 400 error 
+  res.status(500).send('Not Te implemented')
+})
+
+
+
+
+app.post('/modfiygig',(req,res)=>{
+  res.status(500).send('Not Te implemented')
+})
+
+
+
 
 
 
@@ -130,7 +214,7 @@ async function sendRegitrationToDb(EMAIL, PASSWORD){
  * @param {*} str 
  */
 function isStringProvided(str){
-  str !== undefined && str.length > 0
+  return str !== undefined && str.length > 0
 }
 
 
