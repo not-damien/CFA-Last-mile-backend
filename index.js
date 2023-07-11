@@ -7,6 +7,14 @@ const app = express()
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
 
+const client = new MongoClient(uri,{useNewUrlParser:true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1})
+client.connect(err => {
+  const collection = client.db("test").collection("devices");
+  console.log("here 2")
+  client.close();
+})
+
+
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
