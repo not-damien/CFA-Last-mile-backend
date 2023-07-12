@@ -4,8 +4,28 @@ const cors = require('cors')
 const port = 3000
 const app = express()
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+
 const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
+
+const { MongoClient, ServerApiVersion } = require('mongodb');
+
+
+
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
+
+
+// for parsing application/json requests
+app.use(express.json())
+// for parsing application/x-www-form-urlencoded requests
+app.use(express.urlencoded({ extended: true }))
+// for allowing different domain origins to make requests to this API
+app.use(cors())
 
 
 app.get('/', (req, res) => {
@@ -39,6 +59,12 @@ app.post('/login',(req,res)=>{
     //on failure seend approprate error message and dont update database
 })
 
+//isStringProvided functions checks if string is provided
+function isStringProvided(str) {
+  return str !== undefined && str.trim() !== '';
+}
+
+
 
 /*  EXAMPLE BODY For register http
       {
@@ -48,28 +74,58 @@ app.post('/login',(req,res)=>{
         "password":"test12345"
       }
 */
-app.post('/register',(req,res)=>{
-  const FNAME = req.body.fname
-  const LNAME = req.body.lname
-  const EMAIL = req.body.email
-  const PASSWORD = req.body.password
-    if( !isStringProvided(EMAIL) || !isStringProvided(PASSWORD) || !isStringProvided(FNAME) || !isStringProvided(LNAME)){
-      //send error code missing email or password 
-      res.status(400).send({
-        message: "Missing required information"
-    })}
-  if(!isPasswordValidFormat(thePassword)){
-    res.status(400).send({
-      message: "Password is not formated Properly"
-  })}
-  //todo
-  //sanitize 
+app.use(express.json());
 
-  //validate 
+app.post('/register', async (req, res) => {
+  const { fname, lname, email, password } = req.body;
 
-  //on succsess generate new user in database JWT and send in back in response 
-  //on failure seend approprate error message and dont update database
-})
+  if (!email || !password || !fname || !lname) {
+    return res.status(400).send({
+      message: "Missing required information"
+    });
+  }
+
+  if (!isPasswordValidFormat(password)) {
+    return res.status(400).send({
+      message: "Password is not formatted properly"
+    });
+  }
+
+  // TODO: Sanitize the input using express-validator or other libraries
+
+  try {
+    // Save registration data to the database
+    const result = await sendRegistrationToDb(email, password, res);
+
+    if (result.success) {
+      // Generate JWT token for the user
+      const token = generateJwtToken(email);
+
+      // Send success response with the generated token
+      return res.status(200).send({
+        success: true,
+        message: "Registration successful",
+        token: token
+      });
+    } else {
+      // Handle the case when the data couldn't be saved in the database
+      return res.status(500).send({
+        success: false,
+        message: "Failed to save registration data"
+      });
+    }
+  } catch (error) {
+    console.error('An error occurred while saving registration data:', error);
+    return res.status(500).send({
+      success: false,
+      message: "An error occurred while saving registration data"
+    });
+  }
+});
+
+
+
+
 
 
 app.get('/logout', (req, res) => {
@@ -86,16 +142,43 @@ app.listen(port, () => {
 
 
 
-async function sendRegitrationToDb(EMAIL, PASSWORD){
+async function sendRegistrationToDb(EMAIL, PASSWORD, res) {
   try {
-    //todo connect to db 
-    //post collection.insertOne({email:EMAIL, password:PASSWORD})
+    // Connect to the database
+    await client.connect();
+
+    const collection = client.db.collection(process.env.dbCollectionName);
+
+    // Insert the data into the database
+    const result = await collection.insertOne({ email: EMAIL, password: PASSWORD });
+
+    if (result.insertedCount === 1) {
+      console.log('Registration data saved successfully');
+      return { success: true, message: 'Registration data saved successfully' };
+    } else {
+      throw new Error('Failed to save registration data');
+    }
   } catch (error) {
-    //send 500 error
-  }finally{
-    //unconnect from db
+    console.error('An error occurred while saving registration data:', error);
+    // Handle the error and send a 500 error response
+    res.status(500).send({ success: false, message: 'An error occurred while saving registration data' });
+  } finally {
+    // Disconnect from the database
+    if (client) {
+      await client.close();
+    }
   }
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
