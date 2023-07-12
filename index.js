@@ -3,13 +3,10 @@ const express = require('express')
 const cors = require('cors') 
 const port = 3000
 const app = express()
-
-
-const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
+app.use(express.json())
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-
-
+const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -18,15 +15,19 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
-
-
-// for parsing application/json requests
-app.use(express.json())
-// for parsing application/x-www-form-urlencoded requests
-app.use(express.urlencoded({ extended: true }))
-// for allowing different domain origins to make requests to this API
-app.use(cors())
-
+async function run() {
+  try {
+    // Connect the client to the server	(optional starting in v4.7)
+    await client.connect();
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    await client.close();
+  }
+}
+run().catch(console.dir);
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
@@ -45,11 +46,13 @@ app.post('/login',(req,res)=>{
     const EMAIL = req.body.email
     const PASSWORD = req.body.password
     if( !isStringProvided(EMAIL) || !isStringProvided(PASSWORD)){
-      //todo
       //send error code missing email or password 
       res.status(400).send({
         message: "Missing required information"
-    })}
+    })}else{
+      res.send(200)
+    }
+
     //todo
     //sanitize 
 
@@ -68,62 +71,68 @@ function isStringProvided(str) {
 
 /*  EXAMPLE BODY For register http
       {
-        "FNAME":"Damien",
-        "LNAME":"Cruz",
+        "fname":"Damien",
+        "lname":"Cruz",
         "email":"Damien@fake.email",
-        "password":"test12345"
+        "password":"@Test12345"
       }
 */
-app.use(express.json());
-
-app.post('/register', async (req, res) => {
-  const { fname, lname, email, password } = req.body;
-
-  if (!email || !password || !fname || !lname) {
-    return res.status(400).send({
-      message: "Missing required information"
-    });
-  }
-
-  if (!isPasswordValidFormat(password)) {
-    return res.status(400).send({
-      message: "Password is not formatted properly"
-    });
-  }
-
-  // TODO: Sanitize the input using express-validator or other libraries
-
-  try {
-    // Save registration data to the database
-    const result = await sendRegistrationToDb(email, password, res);
-
-    if (result.success) {
-      // Generate JWT token for the user
-      const token = generateJwtToken(email);
-
-      // Send success response with the generated token
-      return res.status(200).send({
-        success: true,
-        message: "Registration successful",
-        token: token
-      });
-    } else {
-      // Handle the case when the data couldn't be saved in the database
-      return res.status(500).send({
-        success: false,
-        message: "Failed to save registration data"
-      });
+app.post('/register',(req,res)=>{
+  const FNAME = req.body.fname
+  const LNAME = req.body.lname
+  const EMAIL = req.body.email
+  const PASSWORD = req.body.password
+    if( !isStringProvided(EMAIL) || !isStringProvided(PASSWORD) || !isStringProvided(FNAME) || !isStringProvided(LNAME)){
+      //send error code missing email or password 
+      res.status(400).send({
+        message: "Missing required information"
+    })}else if(!isPasswordValidFormat(PASSWORD)){
+      res.status(400).send({
+        message: "Password is not formated Properly"
+    })}else{
+     sendRegistrationToDb(EMAIL,LNAME,res)
+     res.status(200).send({
+      message:"registration set"
+     })
     }
-  } catch (error) {
-    console.error('An error occurred while saving registration data:', error);
-    return res.status(500).send({
-      success: false,
-      message: "An error occurred while saving registration data"
-    });
+
+
+
+
+  //todo
+  //sanitize 
+
+
+  //on succsess generate new user in database JWT and send in back in response 
+  //on failure seend approprate error message and dont update database
+})
+
+/*
+{
+  email:"damien@example.com",
+  currentpassword:"@Test12345",
+  newpassword: "@Computer123"
+}
+
+*/
+
+
+app.post('/changepassword',(req,res)=>{
+  const EMAIL = req.body.email;
+  const CURRENT_PASSWORD = req.body.currentpassword;
+  const NEW_PASWORD = req.body.newpassword;
+  if(CURRENT_PASSWORD == NEW_PASWORD){
+    res.status(400).send({
+      message: "New Password Cannot Match Old Password"
+    })
+  }else if(isPasswordValidFormat(NEW_PASWORD)){
+    //also check if old password is correct for email
+    //Hash and salt new password and set it as the users password
+    res.sendStatus(200)
+  }else{
+    res.sendStatus(400)
   }
-});
-
-
+})
 
 
 
@@ -131,6 +140,51 @@ app.post('/register', async (req, res) => {
 app.get('/logout', (req, res) => {
   res.send('Logged Out')
 })
+
+
+/*
+example bodyy 
+{
+  jobname: 'UX Developer Needed',
+  pay: 500,
+  catagories, ["Web Design","UI/ UX Design"],
+  discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
+}
+*/
+app.post('/creategig',(req,res)=>{
+  res.status(500).send('Not Te implemented')
+})
+
+
+
+/*
+{
+  email: "DamienCruz@computingforall.com",
+  password: "fakepassword",
+  gigid: "123456",  //each gig should have a uniqe id 
+
+}
+*/
+
+app.delete('/deletegig',(req,res)=>{
+  const EMAIL = req.body.email
+  const PASSWORD = req.body.password
+  //todo 
+  //verfiy password/email match the one tied to the gig
+  //on sucsess send 200 and delete 
+  //on fail send 400 error 
+  res.status(500).send('Not Te implemented')
+})
+
+
+
+
+app.post('/modfiygig',(req,res)=>{
+  res.status(500).send('Not Te implemented')
+})
+
+
+
 
 
 
@@ -147,12 +201,12 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, res) {
     // Connect to the database
     await client.connect();
 
-    const collection = client.db.collection(process.env.dbCollectionName);
+    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
 
     // Insert the data into the database
     const result = await collection.insertOne({ email: EMAIL, password: PASSWORD });
-
-    if (result.insertedCount === 1) {
+    console.log(result)
+    if (result.acknowledged) {//erorr here
       console.log('Registration data saved successfully');
       return { success: true, message: 'Registration data saved successfully' };
     } else {
@@ -205,7 +259,7 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, res) {
  * @param {*} str 
  */
 function isStringProvided(str){
-  str !== undefined && str.length > 0
+  return str !== undefined && str.length > 0
 }
 
 
