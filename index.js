@@ -3,6 +3,7 @@ const express = require('express')
 const cors = require('cors') 
 const port = 3000
 const app = express()
+const bcrypt = require('bcrypt');
 app.use(express.json())
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -42,7 +43,7 @@ app.get('/', (req, res) => {
       }
 */
 
-app.post('/login',(req,res)=>{
+app.post('/login',async (req,res)=>{
     const EMAIL = req.body.email
     const PASSWORD = req.body.password
     if( !isStringProvided(EMAIL) || !isStringProvided(PASSWORD)){
@@ -50,6 +51,24 @@ app.post('/login',(req,res)=>{
       res.status(400).send({
         message: "Missing required information"
     })}else{
+      //todo get information about user from database
+      //compare hashed value from data base to provided password
+      //when matching return 200 with jwt
+      try{
+        await client.connect();
+        const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+        let user = collection.find({});
+        console.log("hi")
+        console.log(user)
+      }catch(erorr){
+        console.log(erorr)
+      }finally{
+        if (client) {
+          await client.close();
+        }
+      }      
+     
+
       res.send(200)
     }
 
@@ -90,7 +109,7 @@ app.post('/register',(req,res)=>{
       res.status(400).send({
         message: "Password is not formated Properly"
     })}else{
-     sendRegistrationToDb(EMAIL,LNAME,res)
+     sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,res)
      res.status(200).send({
       message:"registration set"
      })
@@ -196,37 +215,33 @@ app.listen(port, () => {
 
 
 
-async function sendRegistrationToDb(EMAIL, PASSWORD, res) {
-  try {
-    // Connect to the database
-    await client.connect();
+async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
+  let success = false;      
+  try{
+        // store hash in the database
+          await client.connect();
+          const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+          const hash = bcrypt.hashSync(PASSWORD, 10);
+          const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME });
+          console.log(result);
+          if (result.acknowledged) { //erorr here
+            console.log('Registration data saved successfully');
+            success = true;
+          }else {
+            throw new Error('Failed to save registration data');
+          }
+      }
+      catch(error){
+        console.error('An error occurred while saving registration data:', error);
 
-    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
-
-    // Insert the data into the database
-    const result = await collection.insertOne({ email: EMAIL, password: PASSWORD });
-    console.log(result)
-    if (result.acknowledged) {//erorr here
-      console.log('Registration data saved successfully');
-      return { success: true, message: 'Registration data saved successfully' };
-    } else {
-      throw new Error('Failed to save registration data');
-    }
-  } catch (error) {
-    console.error('An error occurred while saving registration data:', error);
-    // Handle the error and send a 500 error response
-    res.status(500).send({ success: false, message: 'An error occurred while saving registration data' });
-  } finally {
-    // Disconnect from the database
-    if (client) {
-      await client.close();
-    }
-  }
-}
-
-
-
-
+      }finally{
+      // Disconnect from the database
+        if (client) {
+          await client.close();
+        }
+        return success;
+      }
+  } 
 
 
 

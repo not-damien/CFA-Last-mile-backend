@@ -30,3 +30,6 @@ async function comparePassword(plaintextPassword, hash) {
     return result;
 }
 
+const hash = bcrypt.hashSync(myPlaintextPassword, saltRounds);
+
+bcrypt.compareSync(myPlaintextPassword, hash);
