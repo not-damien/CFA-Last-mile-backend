@@ -51,15 +51,21 @@ app.post('/login',async (req,res)=>{
       res.status(400).send({
         message: "Missing required information"
     })}else{
-      //todo get information about user from database
-      //compare hashed value from data base to provided password
+      //todo 
       //when matching return 200 with jwt
       try{
         await client.connect();
         const collection = client.db("upcycling").collection(process.env.dbCollectionName);
-        let user = collection.find({});
-        console.log("hi")
+        //get information about user from database
+        let user = await collection.findOne({email:EMAIL});
         console.log(user)
+        //compare hashed value from data base to provided password
+        if(bcrypt.compareSync(PASSWORD, user.password)){
+          //login
+          console.log(user.fname + ' Logged in')
+        }else{
+          //wrong password
+        }
       }catch(erorr){
         console.log(erorr)
       }finally{
@@ -69,7 +75,7 @@ app.post('/login',async (req,res)=>{
       }      
      
 
-      res.send(200)
+      res.sendStatus(200)
     }
 
     //todo
