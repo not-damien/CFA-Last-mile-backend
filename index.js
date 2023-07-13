@@ -3,6 +3,7 @@ const express = require('express')
 const cors = require('cors') 
 const port = 3000
 const app = express()
+const bcrypt = require('bcrypt');
 app.use(express.json())
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -42,7 +43,7 @@ app.get('/', (req, res) => {
       }
 */
 
-app.post('/login',(req,res)=>{
+app.post('/login',async (req,res)=>{
     const EMAIL = req.body.email
     const PASSWORD = req.body.password
     if( !isStringProvided(EMAIL) || !isStringProvided(PASSWORD)){
@@ -50,7 +51,31 @@ app.post('/login',(req,res)=>{
       res.status(400).send({
         message: "Missing required information"
     })}else{
-      res.send(200)
+      //todo 
+      //when matching return 200 with jwt
+      try{
+        await client.connect();
+        const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+        //get information about user from database
+        let user = await collection.findOne({email:EMAIL});
+        console.log(user)
+        //compare hashed value from data base to provided password
+        if(bcrypt.compareSync(PASSWORD, user.password)){
+          //login
+          console.log(user.fname + ' Logged in')
+        }else{
+          //wrong password
+        }
+      }catch(erorr){
+        console.log(erorr)
+      }finally{
+        if (client) {
+          await client.close();
+        }
+      }      
+     
+
+      res.sendStatus(200)
     }
 
     //todo
@@ -61,6 +86,12 @@ app.post('/login',(req,res)=>{
     //on succsess generate new JWT and send in back in response 
     //on failure seend approprate error message and dont update database
 })
+
+//isStringProvided functions checks if string is provided
+function isStringProvided(str) {
+  return str !== undefined && str.trim() !== '';
+}
+
 
 
 /*  EXAMPLE BODY For register http
@@ -84,9 +115,10 @@ app.post('/register',(req,res)=>{
       res.status(400).send({
         message: "Password is not formated Properly"
     })}else{
-      res.status(200).send({
-        message: "ok"
-      })
+     sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,res)
+     res.status(200).send({
+      message:"registration set"
+     })
     }
 
 
@@ -95,7 +127,6 @@ app.post('/register',(req,res)=>{
   //todo
   //sanitize 
 
-  //validate 
 
   //on succsess generate new user in database JWT and send in back in response 
   //on failure seend approprate error message and dont update database
@@ -190,16 +221,39 @@ app.listen(port, () => {
 
 
 
-async function sendRegitrationToDb(EMAIL, PASSWORD){
-  try {
-    //todo connect to db 
-    //post collection.insertOne({email:EMAIL, password:PASSWORD})
-  } catch (error) {
-    //send 500 error
-  }finally{
-    //unconnect from db
-  }
-}
+async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
+  let success = false;      
+  try{
+        // store hash in the database
+          await client.connect();
+          const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+          const hash = bcrypt.hashSync(PASSWORD, 10);
+          const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME });
+          console.log(result);
+          if (result.acknowledged) { //erorr here
+            console.log('Registration data saved successfully');
+            success = true;
+          }else {
+            throw new Error('Failed to save registration data');
+          }
+      }
+      catch(error){
+        console.error('An error occurred while saving registration data:', error);
+
+      }finally{
+      // Disconnect from the database
+        if (client) {
+          await client.close();
+        }
+        return success;
+      }
+  } 
+
+
+
+
+
+
 
 
 

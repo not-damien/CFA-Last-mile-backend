@@ -1,0 +1,10 @@
+###
+POST http://localhost:3000/register HTTP/1.1
+content-type: application/json
+
+{
+        "fname":"Damien",
+        "lname":"Cruz",
+        "email":"Damien@fake.email",
+        "password":"P@ssw0rd123!"
+}
