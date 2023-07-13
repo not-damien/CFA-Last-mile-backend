@@ -5,6 +5,6 @@ content-type: application/json
 {
         "fname":"Damien",
         "lname":"Cruz",
-        "email":"Damien@fake.email",
+        "email":"Damien@bal.email",
         "password":"P@ssw0rd123!"
 }

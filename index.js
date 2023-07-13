@@ -114,12 +114,13 @@ app.post('/register',(req,res)=>{
     })}else if(!isPasswordValidFormat(PASSWORD)){
       res.status(400).send({
         message: "Password is not formated Properly"
-    })}else{
-     sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,res)
-     res.status(200).send({
-      message:"registration set"
-     })
+      })} else{
+          sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,res)
+          res.status(200).send({
+           message:"registration set"
+          })
     }
+    
 
 
 
@@ -227,16 +228,21 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
         // store hash in the database
           await client.connect();
           const collection = client.db("upcycling").collection(process.env.dbCollectionName);
-          const hash = bcrypt.hashSync(PASSWORD, 10);
-          const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME });
-          console.log(result);
-          if (result.acknowledged) { //erorr here
-            console.log('Registration data saved successfully');
-            success = true;
-          }else {
-            throw new Error('Failed to save registration data');
-          }
-      }
+          const existingUser = await collection.findOne({email:EMAIL});
+          console.log(existingUser);
+          if(existingUser){
+            console.log("User Exists");
+          }else{
+            const hash = bcrypt.hashSync(PASSWORD, 10);
+            const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME });
+            console.log(result);
+            if (result.acknowledged) { //erorr here
+              console.log('Registration data saved successfully');
+              success = true;
+            }else {
+              throw new Error('Failed to save registration data');
+            }
+      }}
       catch(error){
         console.error('An error occurred while saving registration data:', error);
 
