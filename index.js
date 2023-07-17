@@ -43,7 +43,6 @@ app.get('/', (req, res) => {
         "password":"test12345"
       }
 */
-
 app.post('/login',async (req,res)=>{
     const EMAIL = req.body.email
     const PASSWORD = req.body.password
@@ -60,11 +59,14 @@ app.post('/login',async (req,res)=>{
         //get information about user from database
         let user = await collection.findOne({email:EMAIL});
         console.log(user)
-        //compare hashed value from data base to provided password
-        if(bcrypt.compareSync(PASSWORD, user.password)){
+        if(!user){
+          res.status(400).send({message: "Email or password does not match"})
+        }else if(bcrypt.compareSync(PASSWORD, user.password)){
           //login
           console.log(user.fname + ' Logged in')
+          res.status(200).send({message: user.fname + ' Logged in'})
         }else{
+          res.status(400).send({message: "Email or password does not match"})
           //wrong password
         }
       }catch(erorr){
@@ -76,7 +78,7 @@ app.post('/login',async (req,res)=>{
       }      
      
 
-      res.sendStatus(200)
+      
     }
 
     //todo
@@ -144,7 +146,7 @@ app.post('/register',(req,res)=>{
 */
 
 
-app.post('/changepassword',(req,res)=>{
+app.post('/changepassword',async (req,res)=>{
   const EMAIL = req.body.email;
   const CURRENT_PASSWORD = req.body.currentpassword;
   const NEW_PASWORD = req.body.newpassword;
@@ -155,7 +157,36 @@ app.post('/changepassword',(req,res)=>{
   }else if(isPasswordValidFormat(NEW_PASWORD)){
     //also check if old password is correct for email
     //Hash and salt new password and set it as the users password
-    res.sendStatus(200)
+    try{
+        await client.connect();
+        const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+        //get information about user from database
+        let user = await collection.findOne({email:EMAIL});
+        console.log("current user")
+        console.log(user)
+        if(!user){
+          //user acount not found
+          res.sendStatus(400)
+        }else if(bcrypt.compareSync(CURRENT_PASSWORD, user.password)){//compare hashed value from data base to provided password
+          //todo update user in database
+          let newhash = bcrypt.hashSync(NEW_PASWORD, 10);
+          await collection.findOneAndUpdate(user,{$set:{password: newhash}});
+          console.log(newhash)
+          res.status(200).send({message:"Password Updated"})
+          //insert into user document here
+        }else{
+          //wrong password
+          console.log("Wrong Password")
+          res.status(400).send({message: "Wrong Paassword"})
+        }
+      }catch(erorr){
+        console.log(erorr)
+      }finally{
+        if (client) {
+          await client.close();
+        }
+      }      
+    
   }else{
     res.sendStatus(400)
   }
