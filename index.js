@@ -58,11 +58,14 @@ app.post('/login',async (req,res)=>{
         //get information about user from database
         let user = await collection.findOne({email:EMAIL});
         console.log(user)
-        //compare hashed value from data base to provided password
-        if(bcrypt.compareSync(PASSWORD, user.password)){
+        if(!user){
+          res.status(400).send({message: "Email or password does not match"})
+        }else if(bcrypt.compareSync(PASSWORD, user.password)){
           //login
           console.log(user.fname + ' Logged in')
+          res.status(200).send({message: user.fname + ' Logged in'})
         }else{
+          res.status(400).send({message: "Email or password does not match"})
           //wrong password
         }
       }catch(erorr){
@@ -74,7 +77,7 @@ app.post('/login',async (req,res)=>{
       }      
      
 
-      res.sendStatus(200)
+      
     }
 
     //todo
