@@ -33,6 +33,19 @@ async function run() {
 }
 run().catch(console.dir);
 
+
+
+const auth = require("./middleware/auth");
+
+app.post("/welcome", auth, (req, res) => {
+  res.status(200).send("Welcome 🙌 "+ req.user.fname);
+});
+
+
+
+
+
+
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
