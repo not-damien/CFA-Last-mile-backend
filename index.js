@@ -76,7 +76,18 @@ app.post('/login',async (req,res)=>{
         }else if(bcrypt.compareSync(PASSWORD, user.password)){
           //login
           console.log(user.fname + ' Logged in')
-          res.status(200).send({message: user.fname + ' Logged in'})
+          const token = jwt.sign(
+            { user_id: user._id, },
+            process.env.TOKEN_KEY,
+            {
+              expiresIn: "2h",
+            }
+          );
+          // save user token
+          await collection.findOneAndUpdate(user,{$set:{"token": token}});
+          user.token = token
+          res.status(200).send({message: user.fname + ' Logged in', "user":user })
+
         }else{
           res.status(400).send({message: "Email or password does not match"})
           //wrong password
