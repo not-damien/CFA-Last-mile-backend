@@ -8,3 +8,15 @@ content-type: application/json
         "email":"Damien@bal.email",
         "password":"P@ssw0rd123!"
 }
+
+### 
+POST http://localhost:3000/creategig HTTP/1.1
+content-type: application/json
+
+{
+        "jobname":"Software Engineer Needed",
+        "pay": 500,
+        "categories": "Web Design",
+        "description": "I need a UX developer to help with a design for a website for my new restaurant"
+}
+

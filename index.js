@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 
 app.use(express.json())
 
+
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -267,10 +268,30 @@ response: {
     discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
 }
 }
+check if the user is already logged in
+if not logged in then return false and redirect to login
+if logged in then return true and continue with creategig
+before sending information create a gig id with a function and then send information to database.
 */
-app.post('/creategig',(req,res)=>{
-  res.status(500).send('Not Te implemented')
-})
+app.post('/creategig', async (req,res)=>{
+  
+    JOBNAME = req.body.jobname;
+    PAY = req.body.pay;
+    CATEGORIES = req.body.categories;
+    DESCRIPTION = req.body.description;
+   
+  if(!isStringProvided(JOBNAME) || !isStringProvided(CATEGORIES) || !isStringProvided(DESCRIPTION) || !isNumberProvided(PAY)){
+    res.status(400).send({
+      message: "Missing required information"
+    })
+  }else{
+    sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION)
+    res.status(200).send({
+      message: "Gig successfully submitted"
+    })
+  }
+
+});
 
 
 
@@ -342,6 +363,7 @@ or
 
 
 app.post('/modfiygig',(req,res)=>{
+  
   res.status(500).send('Not Te implemented')
 })
 
@@ -391,8 +413,40 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
       }
   } 
 
+/**
+ * Sending gig to the database, if checks if the gig already exists. 
+ */
 
+async function sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION) {
+result = {success: false};
+  try {
+    await client.connect();
+    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+    const ExistingGig = await collection.findOne({jobname: JOBNAME});
+    if (ExistingGig) {
+      console.log("The Gig already exists")
+    }else{
+      const GigResult = await collection.insertOne({jobname: JOBNAME, pay: PAY, categories: CATEGORIES, description: DESCRIPTION});
+      console.log(GigResult);
+      if(GigResult.acknowledged){
+        console.log("The gig submitted successfully")
+        result.success = true;
+      }else{
+        throw new Error("Failed to submit the gig");
+      }
+    }
+    
 
+  } catch (error) {
+    console.error("An error occurred while submitting the gig", error);
+  }finally{
+     // Disconnect from the database
+     if (client) {
+      await client.close();
+    }
+    return result;
+  }
+}
 
 
 
@@ -417,6 +471,7 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
 
 // helper functions
 
+
 /**
  * checks if a string param has been provided
  * @param {*} str 
@@ -424,6 +479,17 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
 function isStringProvided(str){
   return str !== undefined && str.length > 0
 }
+
+/**
+ * 
+ * @param {*} num 
+ * @returns double 
+ */
+function isNumberProvided(num) {
+  return typeof num === 'number' && num !== undefined && !isNaN(num);
+}
+
+
 
 
 
