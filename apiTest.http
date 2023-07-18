@@ -20,3 +20,13 @@ content-type: application/json
         "categories": "Design",
         "description": "UX devolper to help with a design for a website for my new resturaunt"
 }
+
+###
+POST /welcome HTTP/1.1
+Host: localhost:3000
+x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjRiNzE3ZDIzYWJiYzkxNjMyZjU0Mjk3IiwiaWF0IjoxNjg5NzIxNzY3LCJleHAiOjE2ODk3MjE4Mjd9.vO-4EqpilSnG_EkZoCHj5MZsyQ7hVTf7zPOtr1L9xlA
+Content-Type: application/json
+Content-Length: 192
+
+{"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjRiNzE3ZDIzYWJiYzkxNjMyZjU0Mjk3IiwiaWF0IjoxNjg5NzIxNzY3LCJleHAiOjE2ODk3MjE4Mjd9.vO-4EqpilSnG_EkZoCHj5MZsyQ7hVTf7zPOtr1L9xlA"
+}

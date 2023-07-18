@@ -4,6 +4,8 @@ const cors = require('cors')
 const port = 3000
 const app = express()
 const bcrypt = require('bcrypt');
+const jwt = require("jsonwebtoken");
+
 app.use(express.json())
 
 
@@ -31,16 +33,40 @@ async function run() {
 }
 run().catch(console.dir);
 
+
+
+const auth = require("./middleware/auth");
+
+app.post("/welcome", auth, (req, res) => {
+  res.status(200).send("Welcome 🙌 "+ req.user.fname);
+});
+
+
+
+
+
+
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
 
 
-/*  EXAMPLE BODY For login http
-      {
+/*   Note: user may be null if login fails 
+      request:{
         "email":"Damien@fake.email",
         "password":"test12345"
+      }
+      response:{
+        message: "useful information"
+        user: {
+           _id: "user-id"
+          email: 'Damien@fake.email',
+          password: '$HashedAndSaltedPassword',
+          fname: 'Damien',
+          lname: 'Cruz',
+          token: "sample-jwt-token"
+}
       }
 */
 app.post('/login',async (req,res)=>{
@@ -64,7 +90,18 @@ app.post('/login',async (req,res)=>{
         }else if(bcrypt.compareSync(PASSWORD, user.password)){
           //login
           console.log(user.fname + ' Logged in')
-          res.status(200).send({message: user.fname + ' Logged in'})
+          const token = jwt.sign(
+            { user_id: user._id, },
+            process.env.TOKEN_KEY,
+            {
+              expiresIn: "2h",
+            }
+          );
+          // save user token
+          await collection.findOneAndUpdate(user,{$set:{"token": token}});
+          user.token = token
+          res.status(200).send({message: user.fname + ' Logged in', "user":user })
+
         }else{
           res.status(400).send({message: "Email or password does not match"})
           //wrong password
@@ -98,12 +135,27 @@ function isStringProvided(str) {
 
 
 /*  EXAMPLE BODY For register http
-      {
+      request: {
         "fname":"Damien",
         "lname":"Cruz",
         "email":"Damien@fake.email",
         "password":"@Test12345"
       }
+
+      response:{
+        message: "useful information"
+        user: {
+           _id: "user-id"
+          email: 'Damien@fake.email',
+          password: '$HashedAndSaltedPassword',
+          fname: 'Damien',
+          lname: 'Cruz',
+          token: "sample-jwt-token"
+        }
+      }
+      Note: user may be null if registration fails 
+
+
 */
 app.post('/register',(req,res)=>{
   const FNAME = req.body.fname
@@ -137,10 +189,21 @@ app.post('/register',(req,res)=>{
 })
 
 /*
-{
+request:{
   email:"damien@example.com",
   currentpassword:"@Test12345",
   newpassword: "@Computer123"
+}
+
+
+status 400
+response: {
+  message: "info on why it failed"
+}
+or 
+status 200
+{
+  message: "Password Updated"
 }
 
 */
@@ -202,11 +265,21 @@ app.get('/logout', (req, res) => {
 
 /*
 example bodyy 
-{
+reguest: {
   jobname: 'UX Developer Needed',
   pay: 500,
-  catagories, ["Web Design","UI/ UX Design"],
-  discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
+  categories: ["Web Design","UI/ UX Design"],
+  description: "I need a UX devolper to help with a design for a website for my new resturaunt"
+}
+response: {
+  message: "useful information"
+  gig: {
+    _id: "gig-id"
+    jobname: 'UX Developer Needed',
+    pay: 500,
+    catagories, ["Web Design","UI/ UX Design"],
+    discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
+}
 }
 check if the user is already logged in
 if not logged in then return false and redirect to login
@@ -236,12 +309,23 @@ app.post('/creategig', async (req,res)=>{
 
 
 /*
-{
+request:{
   email: "DamienCruz@computingforall.com",
   password: "fakepassword",
   gigid: "123456",  //each gig should have a uniqe id 
 
 }
+response:
+200
+{
+  message: ok
+}
+or 
+400
+{
+  message: "it failed and heres why"
+}
+
 */
 
 app.delete('/deletegig',async(req,res)=>{
@@ -254,6 +338,40 @@ app.delete('/deletegig',async(req,res)=>{
 })
 
 
+
+/*
+request:{
+  email: "DamienCruz@computingforall.com",
+  password: "fakepassword",
+  gigid: "123456",
+  gig:{
+    jobname: 'UX Developer Needed',
+    pay: 500,
+    catagories, ["Web Design","UI/ UX Design"],
+    discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
+    }
+}
+response:
+200
+{
+  message: ok
+  gig:{
+    _id: "gig-id"
+    jobname: 'UX Developer Needed',
+    pay: 500,
+    catagories, ["Web Design","UI/ UX Design"],
+    discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
+    }
+}
+or 
+400
+{
+  message: "it failed and heres why"
+}
+
+*/
+
+
 /*
 example bodyy 
 {
@@ -263,6 +381,50 @@ example bodyy
   discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
 }
 */
+
+/*
+request:{
+  email: "DamienCruz@computingforall.com",
+  password: "fakepassword",
+  gigid: "123456",
+  gig:{
+    jobname: 'UX Developer Needed',
+    pay: 500,
+    catagories, ["Web Design","UI/ UX Design"],
+    discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
+    }
+}
+response:
+200
+{
+  message: ok
+  gig:{
+    _id: "gig-id"
+    jobname: 'UX Developer Needed',
+    pay: 500,
+    catagories, ["Web Design","UI/ UX Design"],
+    discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
+    }
+}
+or 
+400
+{
+  message: "it failed and heres why"
+}
+
+*/
+
+
+/*
+example bodyy 
+{
+  jobname: 'UX Developer Needed',
+  pay: 500,
+  catagories, ["Web Design","UI/ UX Design"],
+  discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
+}
+*/
+
 
 app.post('/modifygig',async(req,res)=>{
 
