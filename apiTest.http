@@ -9,14 +9,14 @@ content-type: application/json
         "password":"P@ssw0rd123!"
 }
 
-### 
-POST http://localhost:3000/creategig HTTP/1.1
+###
+POST http://localhost:3000/modifygig HTTP/1.1
 content-type: application/json
 
 {
-        "jobname":"Software Engineer Needed",
-        "pay": 500,
-        "categories": "Web Design",
-        "description": "I need a UX developer to help with a design for a website for my new restaurant"
+        "_id": "64b5acf2e629c7caa66e3eec",
+        "jobname": "engineer Developer Needed",
+        "pay": 700,
+        "categories": "Design",
+        "description": "UX devolper to help with a design for a website for my new resturaunt"
 }
-

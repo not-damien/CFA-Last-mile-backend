@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 app.use(express.json())
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
@@ -244,22 +244,57 @@ app.post('/creategig', async (req,res)=>{
 }
 */
 
-app.delete('/deletegig',(req,res)=>{
-  const EMAIL = req.body.email
-  const PASSWORD = req.body.password
+app.delete('/deletegig',async(req,res)=>{
+  
   //todo 
   //verfiy password/email match the one tied to the gig
   //on sucsess send 200 and delete 
   //on fail send 400 error 
-  res.status(500).send('Not Te implemented')
+  
 })
 
 
+/*
+example bodyy 
+{
+  jobname: 'UX Developer Needed',
+  pay: 500,
+  catagories, ["Web Design","UI/ UX Design"],
+  discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
+}
+*/
 
+app.post('/modifygig',async(req,res)=>{
 
-app.post('/modfiygig',(req,res)=>{
+  GIGID = new ObjectId(req.body._id);
+  JOBNAME = req.body.jobname;
+  PAY = req.body.pay;
+  CATEGORIES = req.body.categories;
+  DESCRIPTION = req.body.description;
   
-  res.status(500).send('Not Te implemented')
+  let success = false;
+  let errorMessage;
+  try {
+    await client.connect();
+    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+    const updateGig = await collection.updateOne({_id: GIGID}, {$set:{jobname:JOBNAME, pay:PAY, categories:CATEGORIES, description:DESCRIPTION}})
+    console.log(updateGig);
+    success = true;
+  } catch (error) {
+    console.log(error)
+    errorMessage = error.message;
+  }
+  finally{
+    if(client){
+      await client.close();
+    }
+  }
+  if(success){
+    res.status(200).send("Gig has been updated");
+  }else{
+    res.status(500).send("Internal server error: " + errorMessage);
+  }
+
 })
 
 
