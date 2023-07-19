@@ -24,8 +24,8 @@ const verifyToken = async (req, res, next) => {
     const decoded = jwt.verify(token, config.TOKEN_KEY);
     console.log(decoded)
     let obid = new ObjectId(decoded.user_id)
-    req.user = await collection.findOne({"_id":obid});
-    console.log(req.user)
+    req.body.user = await collection.findOne({"_id":obid});
+    console.log(req.body.user)
   } catch (err) { 
     console.log(err)
     return res.status(401).send(err);
