@@ -30,3 +30,12 @@ Content-Length: 192
 
 {"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjRiNzE3ZDIzYWJiYzkxNjMyZjU0Mjk3IiwiaWF0IjoxNjg5NzIxNzY3LCJleHAiOjE2ODk3MjE4Mjd9.vO-4EqpilSnG_EkZoCHj5MZsyQ7hVTf7zPOtr1L9xlA"
 }
+
+
+###
+DELETE http://localhost:3000/deletegig HTTP/1.1
+content-type: application/json
+
+{
+        "_id": "64b5beab76be96fa8eedc71f"
+}
