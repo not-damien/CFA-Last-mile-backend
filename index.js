@@ -36,7 +36,13 @@ async function run() {
 run().catch(console.dir);
 
 
+/*
+token: "cdnksdksdjncksnkjcsndndkc"
 
+user{
+  info about the user 
+}
+*/
 
 
 app.post("/welcome", auth, (req, res) => {
@@ -427,6 +433,34 @@ or
 */
 
 
+
+app.get('/gigbyid',async (req,res)=>{
+  GIGID = new ObjectId(req.body._id);
+  let gig = {}
+  let success = false;
+  let errorMessage;
+  try {
+    await client.connect();
+    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+    
+    gig = await collection.findOne({_id: GIGID});
+    console.log(gig)
+    success = true;
+  } catch (error) {
+    console.log(error)
+    errorMessage = error.message;
+  }
+  finally{
+    if(client){
+      await client.close();
+    }
+  }
+  if(success){
+    res.status(200).send(gig);
+  }else{
+    res.status(500).send("Internal server error: " + errorMessage);
+  }
+})
 /*
 example bodyy 
 {
@@ -436,10 +470,6 @@ example bodyy
   discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
 }
 */
-app.get('/gigbyid',(req,res)=>{
-
-})
-
 app.post('/modifygig',async(req,res)=>{
 
   GIGID = new ObjectId(req.body._id);
@@ -533,6 +563,13 @@ let result = {success: false};
       console.log("The Gig already exists")
     }else{
       const GigResult = await collection.insertOne({jobname: JOBNAME, pay: PAY, categories: CATEGORIES, description: DESCRIPTION, email: USER.email});
+      /*
+        {
+          acknowledged: true,
+          insertedId: "ccfownefjnfksn122303nsn"
+        }
+
+      */
       console.log(GigResult)
       if(GigResult.acknowledged){
         result.success = true;
