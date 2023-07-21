@@ -10,12 +10,32 @@ content-type: application/json
 }
 
 ###
+POST http://localhost:3000/login HTTP/1.1
+content-type: application/json
+
+{
+        "email":"Damien@bal.email",
+        "password":"P@ssw0rd123!"
+}
+
+###
+POST http://localhost:3000/creategig HTTP/1.1
+content-type: application/json
+{
+        "jobname": "engineer Developer Needed",
+        "pay": 700,
+        "categories": "Design",
+        "description": "UX devolper to help with a design for a website for my new resturaunt"
+
+}
+
+###
 POST http://localhost:3000/modifygig HTTP/1.1
 content-type: application/json
 
 {
-        "_id": "64b5acf2e629c7caa66e3eec",
-        "jobname": "engineer Developer Needed",
+        "_id": "64bade53cc9ad044a5253a0f",
+        "jobname": "Engineer Developer Needed",
         "pay": 700,
         "categories": "Design",
         "description": "UX devolper to help with a design for a website for my new resturaunt"
@@ -39,3 +59,8 @@ content-type: application/json
 {
         "_id": "64b5beab76be96fa8eedc71f"
 }
+
+###
+
+GET http://localhost:3000/readgig/64bade53cc9ad044a5253a0f HTTP/1.1 HTTP/1.1
+
