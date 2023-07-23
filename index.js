@@ -484,7 +484,31 @@ app.post('/modifygig',async(req,res)=>{
 })
 
 
+app.get('/readgig/:gigId',async(req, res) => {
+  let success = false;
+  try {
+    const gigId = req.params.gigId;
+    const objectId = new ObjectId(gigId);
+    await client.connect();
+    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+    const readGigResult = await collection.find({_id:objectId}).toArray();
+    console.log(readGigResult);
+    success = true;
+  } catch (error) {
+    console.log(error);
+  } 
+    finally{
+      if(client){
+      await client.close();
+    }
+  }
+  if(success){
+    res.status(200).send("gig retrieval completed");
+  }else{
+    res.status(500).send("Internal server error: ");
+  }
 
+});
 
 
 
