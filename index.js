@@ -5,8 +5,10 @@ const port = 3000
 const app = express()
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
-
+const auth = require("./middleware/auth");
 app.use(express.json())
+
+
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -34,11 +36,17 @@ async function run() {
 run().catch(console.dir);
 
 
+/*
+token: "cdnksdksdjncksnkjcsndndkc"
 
-const auth = require("./middleware/auth");
+user{
+  info about the user 
+}
+*/
+
 
 app.post("/welcome", auth, (req, res) => {
-  res.status(200).send("Welcome 🙌 "+ req.user.fname);
+  res.status(200).send("Welcome 🙌 "+ req.body.user.fname);
 });
 
 
@@ -70,6 +78,7 @@ app.get('/', (req, res) => {
       }
 */
 app.post('/login',async (req,res)=>{
+  console.log(req.body)
     const EMAIL = req.body.email
     const PASSWORD = req.body.password
     if( !isStringProvided(EMAIL) || !isStringProvided(PASSWORD)){
@@ -98,8 +107,8 @@ app.post('/login',async (req,res)=>{
             }
           );
           // save user token
-          await collection.findOneAndUpdate(user,{$set:{"token": token}});
-          user.token = token
+         // await collection.findOneAndUpdate(user,{$set:{"token": token}});
+          user.token = token//give token back to client, dont store on database
           res.status(200).send({message: user.fname + ' Logged in', "user":user })
 
         }else{
@@ -286,22 +295,31 @@ if not logged in then return false and redirect to login
 if logged in then return true and continue with creategig
 before sending information create a gig id with a function and then send information to database.
 */
-app.post('/creategig', async (req,res)=>{
-  
+app.post('/creategig', auth, async (req,res)=>{
     JOBNAME = req.body.jobname;
     PAY = req.body.pay;
     CATEGORIES = req.body.categories;
     DESCRIPTION = req.body.description;
-   
+    USER = req.body.user;
   if(!isStringProvided(JOBNAME) || !isStringProvided(CATEGORIES) || !isStringProvided(DESCRIPTION) || !isNumberProvided(PAY)){
     res.status(400).send({
       message: "Missing required information"
     })
   }else{
-    sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION)
-    res.status(200).send({
+    let result = await sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION, USER)
+    console.log(result)
+    if(result.success){
+      res.status(200).send({
       message: "Gig successfully submitted"
     })
+    }else{
+      res.status(500).send({
+        message: "Gig submittion failed"
+      })
+    }
+    
+    
+    
   }
 
 });
@@ -439,6 +457,34 @@ or
 */
 
 
+
+app.get('/gigbyid',async (req,res)=>{
+  GIGID = new ObjectId(req.body._id);
+  let gig = {}
+  let success = false;
+  let errorMessage;
+  try {
+    await client.connect();
+    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+    
+    gig = await collection.findOne({_id: GIGID});
+    console.log(gig)
+    success = true;
+  } catch (error) {
+    console.log(error)
+    errorMessage = error.message;
+  }
+  finally{
+    if(client){
+      await client.close();
+    }
+  }
+  if(success){
+    res.status(200).send(gig);
+  }else{
+    res.status(500).send("Internal server error: " + errorMessage);
+  }
+})
 /*
 example bodyy 
 {
@@ -448,8 +494,6 @@ example bodyy
   discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
 }
 */
-
-
 app.post('/modifygig',async(req,res)=>{
 
   GIGID = new ObjectId(req.body._id);
@@ -557,20 +601,29 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
  * Sending gig to the database, if checks if the gig already exists. 
  */
 
-async function sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION) {
-result = {success: false};
+async function sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION, USER) {
+let result = {success: false};
   try {
     await client.connect();
     const collection = client.db("upcycling").collection(process.env.dbCollectionName);
-    const ExistingGig = await collection.findOne({jobname: JOBNAME});
+    const ExistingGig = await collection.findOne({jobname: JOBNAME, email: USER.email});
     if (ExistingGig) {
       console.log("The Gig already exists")
     }else{
-      const GigResult = await collection.insertOne({jobname: JOBNAME, pay: PAY, categories: CATEGORIES, description: DESCRIPTION});
-      console.log(GigResult);
+      const GigResult = await collection.insertOne({jobname: JOBNAME, pay: PAY, categories: CATEGORIES, description: DESCRIPTION, email: USER.email});
+      /*
+        {
+          acknowledged: true,
+          insertedId: "ccfownefjnfksn122303nsn"
+        }
+
+      */
+      console.log(GigResult)
       if(GigResult.acknowledged){
-        console.log("The gig submitted successfully")
         result.success = true;
+        await collection.findOneAndUpdate(USER,{$push:{"gigs": GigResult.insertedId}});
+        console.log("The gig submitted successfully")
+        
       }else{
         throw new Error("Failed to submit the gig");
       }
