@@ -166,7 +166,7 @@ function isStringProvided(str) {
 
 
 */
-app.post('/register',(req,res)=>{
+app.post('/register',async (req,res)=>{
   const FNAME = req.body.fname
   const LNAME = req.body.lname
   const EMAIL = req.body.email
@@ -179,9 +179,10 @@ app.post('/register',(req,res)=>{
       res.status(400).send({
         message: "Password is not formated Properly"
       })} else{
-          sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,res)
+          let result = await sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,res)
           res.status(200).send({
-           message:"registration set"
+           message:"registration set",
+           token: result.token
           })
     }
     
@@ -565,7 +566,7 @@ app.listen(port, () => {
 
 
 async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
-  let success = false;      
+  let ret = {success:false, token: null}      
   try{
         // store hash in the database
           await client.connect();
@@ -580,7 +581,15 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
             console.log(result);
             if (result.acknowledged) { //erorr here
               console.log('Registration data saved successfully');
-              success = true;
+              ret.success = true;
+              let id = result.insertedId;
+              const token = jwt.sign(
+                { user_id: id, },
+                process.env.TOKEN_KEY,
+                {
+                  expiresIn: "2h",
+                })
+                ret.token = token
             }else {
               throw new Error('Failed to save registration data');
             }
@@ -593,7 +602,7 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
         if (client) {
           await client.close();
         }
-        return success;
+        return ret;
       }
   } 
 
