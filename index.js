@@ -347,13 +347,37 @@ or
 */
 
 app.delete('/deletegig',async(req,res)=>{
-  
+  GIGID = new ObjectId(req.body._id);
+  let success = false;
+  let errorMessage;
+  try {
+    await client.connect();
+    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+    const deleteGig = await collection.deleteOne({_id: GIGID})
+    console.log(deleteGig);
+    success = true;
+  } catch (error) {
+    console.log(error)
+    errorMessage = error.message;
+  }
+  finally{
+    if(client){
+      await client.close();
+    }
+  }
+  if(success){
+    res.status(200).send("Gig has been deleted successfully");
+  }else{
+    res.status(500).send("Internal server error: " + errorMessage);
+  }
+
+})
+
   //todo 
   //verfiy password/email match the one tied to the gig
   //on sucsess send 200 and delete 
   //on fail send 400 error 
   
-})
 
 
 
@@ -504,7 +528,31 @@ app.post('/modifygig',async(req,res)=>{
 })
 
 
+app.get('/readgig/:gigId',async(req, res) => {
+  let success = false;
+  try {
+    const gigId = req.params.gigId;
+    const objectId = new ObjectId(gigId);
+    await client.connect();
+    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+    const readGigResult = await collection.find({_id:objectId}).toArray();
+    console.log(readGigResult);
+    success = true;
+  } catch (error) {
+    console.log(error);
+  } 
+    finally{
+      if(client){
+      await client.close();
+    }
+  }
+  if(success){
+    res.status(200).send("gig retrieval completed");
+  }else{
+    res.status(500).send("Internal server error: ");
+  }
 
+});
 
 
 
