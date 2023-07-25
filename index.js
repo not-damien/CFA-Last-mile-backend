@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
 const auth = require("./middleware/auth");
 app.use(express.json())
-
+app.use(cors())
 
 
 
