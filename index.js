@@ -556,6 +556,119 @@ app.get('/readgig/:gigId',async(req, res) => {
 });
 
 
+//GET Users By Name //
+/*
+request:{
+  fname: "Damien"
+}
+response:
+200
+{
+  message: ok
+  usersList:{
+    fname: "Damien",
+    lname: "Cruz"
+    }
+}
+or 
+400
+{
+  message: "it failed and heres why"
+}
+*/
+
+app.get('/usersByName/:username', async function(req, res){
+  let success = false;
+  let errorMessage;
+  try {
+
+    const userSearch = req.params.username;
+    const query = { $or: [
+      {fname: {$regex: new RegExp(userSearch, 'i')}},
+      {lname: {$regex: new RegExp(userSearch, 'i')}}
+    ]};
+
+    const projection = {_id: 0,email:0, password:0, gigs: 0 };
+    
+    await client.connect();
+    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+    const userResults = await collection.find(query, { projection }).limit(10).toArray();
+    console.log(userResults);
+    success = true;
+    
+  }catch (error) {
+    console.log(error);
+    errorMessage = error.message;
+  }
+  finally{
+    if(client){
+      await client.close();
+    }
+  }
+  if(success){
+    res.status(200).send("user retrieved successfully");
+  }else{
+    res.status(500).send("Internal Server Error"+ errorMessage);
+    
+  }
+
+})
+
+//GET Users By Name //
+/*
+request:{
+  categories: "UX/UI designer"
+}
+response:
+200
+{
+  message: ok
+  gigsResults:{
+    gig:"UX/UI designer",
+    gig:"UI designer"
+    }
+}
+or 
+400
+{
+  message: "it failed and heres why"
+}
+*/
+app.get('/gigsLookUp/:gigsSearch', async function(req, res){
+  let success = false;
+  let errorMessage;
+  let gigsResults;
+  try {
+
+    const gigsSearch = req.params.gigsSearch;
+    const query = { categories: { $regex: new RegExp(gigsSearch, 'i') } };
+    const projection = {_id: 0,fname:0, lname:0, email:0, password:0};
+    
+    await client.connect();
+    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+    gigsResults = await collection.find(query, { projection }).limit(10).toArray();
+    console.log(gigsResults);
+    success = true;
+    
+  }catch (error) {
+    console.log(error);
+    errorMessage = error.message;
+  }
+  finally{
+    if(client){
+      await client.close();
+    }
+  }
+  if(success){
+    res.status(200).json({
+      message: "The gigs were retrieved successfully",
+      gigsResults:gigsResults
+    });
+  }else{
+    res.status(500).send("Internal Server Error"+ errorMessage);
+    
+  }});
+
 
 
 app.listen(port, () => {
