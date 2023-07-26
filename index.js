@@ -495,22 +495,39 @@ example bodyy
   discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
 }
 */
-app.post('/modifygig',async(req,res)=>{
+app.post('/modifygig',auth ,async(req,res)=>{
+  //todo
+  //pass to auth check
+  //get user's list of gigs 
+  //compare list to provided 
+  //if match
+    //proceed with delete
+    //and remove id from user's list on db
+  //if not match send error
 
   GIGID = new ObjectId(req.body._id);
   JOBNAME = req.body.jobname;
   PAY = req.body.pay;
   CATEGORIES = req.body.categories;
   DESCRIPTION = req.body.description;
-  
+  USER = req.body.user;
+  GIGLIST = USER.gigs;
+
   let success = false;
   let errorMessage;
   try {
     await client.connect();
     const collection = client.db("upcycling").collection(process.env.dbCollectionName);
-    const updateGig = await collection.updateOne({_id: GIGID}, {$set:{jobname:JOBNAME, pay:PAY, categories:CATEGORIES, description:DESCRIPTION}})
-    console.log(updateGig);
-    success = true;
+    
+    if(GIGLIST != null){
+      console.log(GIGLIST)
+      console.log(GIGID)
+      if(GIGLIST.find(element => element.toHexString() == GIGID.toHexString())){
+        const updateGig = await collection.updateOne({_id: GIGID}, {$set:{jobname:JOBNAME, pay:PAY, categories:CATEGORIES, description:DESCRIPTION}})
+        console.log(updateGig);
+        success = true;
+      }
+  }
   } catch (error) {
     console.log(error)
     errorMessage = error.message;
@@ -857,4 +874,11 @@ function hasRequiredCharacters(str) {
     symbolRegex.test(str) &&
     !forbiddenSymbolsRegex.test(str)
   );
+}
+
+function arrayRemove(arr, value) { 
+    
+  return arr.filter(function(ele){ 
+      return ele != value; 
+  });
 }
