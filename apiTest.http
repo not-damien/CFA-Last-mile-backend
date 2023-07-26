@@ -64,3 +64,8 @@ content-type: application/json
 
 GET http://localhost:3000/readgig/64bade53cc9ad044a5253a0f HTTP/1.1 HTTP/1.1
 
+###
+GET http://localhost:3000/usersByName/damien HTTP/1.1 HTTP/1.1
+
+###
+GET http://localhost:3000/gigsLookUp/h HTTP/1.1 HTTP/1.1
