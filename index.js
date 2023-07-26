@@ -666,8 +666,93 @@ app.get('/gigsLookUp/:gigsSearch', async function(req, res){
     });
   }else{
     res.status(500).send("Internal Server Error"+ errorMessage);
+  }
+});
+
+/*
+Documentation for job filters
+
+reguest: {
+  category:"web designer",
+  location: "Seattle",
+  employment_type: "Full Time",
+  min_salary: "$1000",
+  max_salary: "$10000"
+}
+response: {
+  message: "Filter results"
+  jobs: {
+    [
+        jobname: 'UX Developer Needed',
+        employment_type: 'Full Time',
+        pay: $1000,
+        catagories: "Web Design","UI/ UX Design",
+        discription: "I need a UX devolper to help with a design for a website for my new resturaunt"
+        location: "Seattle"
+      },
+      {
+        jobname: "UI Designer",
+        employment_type: "Full Time",
+        pay: $2000,
+        categories: "Web Design","UI/ UX Design",
+        description: "This company needs a UI designer to be able to design their product etc"
+        location: "Seattle "
+      }
+    ]
+}
+*/
+
+app.get('/jobsByFilter/:category/:location/:employee_type/:min_salary/:max_salary', async function(req, res) {
+
+  let success = false;
+  let errorMessage;
+  let jobsFilter;
+  try {
+    const CATEGORY = req.params.category;
+    const LOCATION = req.params.location;
+    const EMPLOYMENT_TYPE = req.params.employee_type;
+    const MIN_SALARY = parseFloat(req.params.min_salary);
+    const MAX_SALARY = parseFloat(req.params.max_salary);
     
-  }});
+
+    const projection = {_id: 0,fname:0, lname:0, email:0, password:0};
+    const query = { $and: 
+      [ 
+        {category: {$regex: new RegExp(CATEGORY, 'i')}},
+        {location: {$regex: new RegExp(LOCATION, 'i')}},
+        {employment_type: {$regex: new RegExp(EMPLOYMENT_TYPE, 'i')}},
+        {salary: {$gte: MIN_SALARY, $lt: MAX_SALARY}}
+      ]
+    }
+
+    await client.connect();
+    const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+    jobsFilter = await collection.find(query, { projection }).limit(100).toArray();
+    console.log(jobsFilter)
+    success = true;
+
+  } catch (error) {
+    console.log(error);
+    errorMessage = error.message;
+  } finally{
+    if(client){
+      await client.close();
+    }
+  }
+  if(success){
+    res.status(200).json({
+      message: "Jobs were filtered successfully",
+      jobsFilter:jobsFilter
+    })
+  }else{
+    res.status(500).send("Internal server error"+ errorMessage)
+  }
+});
+
+
+
+
+
 
 
 
