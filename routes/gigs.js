@@ -43,7 +43,8 @@ module.exports = function (app){
         console.log(result)
         if(result.success){
           res.status(200).send({
-          message: "Gig successfully submitted"
+          message: "Gig successfully submitted!",
+          "_id": result.insertedId
         })
         }else{
           res.status(500).send({
@@ -258,6 +259,7 @@ async function sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION, USER) {
           console.log(GigResult)
           if(GigResult.acknowledged){
             result.success = true;
+            result.insertedId = GigResult.insertedId
             await collection.findOneAndUpdate(USER,{$push:{"gigs": GigResult.insertedId}});
             console.log("The gig submitted successfully")
             
