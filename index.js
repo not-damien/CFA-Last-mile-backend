@@ -395,6 +395,7 @@ or
 app.get('/usersByName/:username', async function(req, res){
   let success = false;
   let errorMessage;
+  let userResults;
   try {
 
     const userSearch = req.params.username;
@@ -407,9 +408,10 @@ app.get('/usersByName/:username', async function(req, res){
     
     await client.connect();
     const collection = client.db("upcycling").collection(process.env.dbCollectionName);
-    const userResults = await collection.find(query, { projection }).limit(10).toArray();
+    userResults = await collection.find(query, { projection }).limit(10).toArray();
     console.log(userResults);
     success = true;
+    
     
   }catch (error) {
     console.log(error);
@@ -421,7 +423,10 @@ app.get('/usersByName/:username', async function(req, res){
     }
   }
   if(success){
-    res.status(200).send("user retrieved successfully");
+    res.status(200).json({
+      message: "User retrieved successfully",
+      userResults:userResults
+    })
   }else{
     res.status(500).send("Internal Server Error"+ errorMessage);
     
