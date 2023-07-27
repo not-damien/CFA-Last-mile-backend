@@ -28,7 +28,6 @@ module.exports = function (app){
     }
     */
     app.post('/creategig', auth, async (req,res)=>{
-        //todo return ether gig or gigID
         JOBNAME = req.body.jobname;
         PAY = req.body.pay;
         CATEGORIES = req.body.categories;
@@ -54,9 +53,6 @@ module.exports = function (app){
       }
     
     });
-
-
-
 
     /*
 request:{
@@ -87,7 +83,6 @@ or
 {
   message: "it failed and heres why"
 }
-
 */
 
 app.get('/gigbyid',async (req,res)=>{
@@ -118,8 +113,6 @@ app.get('/gigbyid',async (req,res)=>{
     }
   })
 
-
-
 /*
 example bodyy 
 {
@@ -129,16 +122,7 @@ example bodyy
   discription, "I need a UX devolper to help with a design for a website for my new resturaunt"
 }
 */
-app.post('/modifygig',auth ,async(req,res)=>{
-    //todo
-    //pass to auth check
-    //get user's list of gigs 
-    //compare list to provided 
-    //if match
-      //proceed with delete
-      //and remove id from user's list on db
-    //if not match send error
-  
+app.post('/modifygig',auth ,async(req,res)=>{  
     GIGID = new ObjectId(req.body._id);
     JOBNAME = req.body.jobname;
     PAY = req.body.pay;
