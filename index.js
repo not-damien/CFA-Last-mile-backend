@@ -42,15 +42,9 @@ user{
 }
 */
 
-
 app.post("/welcome", auth, (req, res) => {
   res.status(200).send("Welcome 🙌 "+ req.body.user.fname);
 });
-
-
-
-
-
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
