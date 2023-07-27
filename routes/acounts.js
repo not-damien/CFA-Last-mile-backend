@@ -42,7 +42,7 @@ module.exports = function (app){
 */
     app.post('/login',async (req,res)=>{
         console.log(req.body)
-          const EMAIL = req.body.email     //todo sanitize 
+          const EMAIL = req.body.email.toLowerCase();    //todo sanitize 
           const PASSWORD = req.body.password
           if( !isStringProvided(EMAIL) || !isStringProvided(PASSWORD)){
             //send error code missing email or password 
@@ -113,7 +113,7 @@ module.exports = function (app){
 app.post('/register',async (req,res)=>{
     const FNAME = req.body.fname//todo sanitize
     const LNAME = req.body.lname
-    const EMAIL = req.body.email
+    const EMAIL = req.body.email.toLowerCase();
     const PASSWORD = req.body.password
       if( !isStringProvided(EMAIL) || !isStringProvided(PASSWORD) || !isStringProvided(FNAME) || !isStringProvided(LNAME)){
         //send error code missing email or password 
@@ -149,7 +149,7 @@ status 200
 }
 */
   app.post('/changepassword',async (req,res)=>{
-    const EMAIL = req.body.email;
+    const EMAIL = req.body.email.toLowerCase();
     const CURRENT_PASSWORD = req.body.currentpassword;
     const NEW_PASWORD = req.body.newpassword;
     if(CURRENT_PASSWORD == NEW_PASWORD){
