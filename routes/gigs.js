@@ -168,8 +168,7 @@ app.post('/modifygig',auth ,async(req,res)=>{
 
 /*
 request:{
-  email: "DamienCruz@computingforall.com",
-  password: "fakepassword",
+  token: "kmecnwocknwekncdpo2o3930fdno23d23d23f",
   gigid: "123456",  //each gig should have a uniqe id 
 
 }
@@ -186,19 +185,33 @@ or
 
 */
 
-app.delete('/deletegig',async(req,res)=>{
-    //todo 
-    //verify that only the owner can delete
-    //remove id from owners gig list
+app.delete('/deletegig',auth,async(req,res)=>{
     GIGID = new ObjectId(req.body._id);
+    USER = req.body.user;
+    USERID = new ObjectId(req.body.user._id)
+    GIGLIST = USER.gigs;
     let success = false;
     let errorMessage;
     try {
-      await client.connect();
-      const collection = client.db("upcycling").collection(process.env.dbCollectionName);
-      const deleteGig = await collection.deleteOne({_id: GIGID})
-      console.log(deleteGig);
-      success = true;
+      if(GIGLIST != null && GIGLIST.length != 0){
+        if(GIGLIST.find(element => element.toHexString() == GIGID.toHexString())){  //verify that gig belongs to owner
+          await client.connect();
+          const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+          const deleteGig = await collection.deleteOne({_id: GIGID})//delete gig from database
+          await collection.findOneAndUpdate(USER,{$set:{"gigs":arrayRemove(GIGLIST,GIGID)}} )//remove id from owners gig list
+          console.log(deleteGig);
+          success = true;
+        }else{
+          console.log(" user doesn't own this gig")
+          errorMessage = " user doesn't own this gig"
+        }
+      }else{
+        //user doesn't own any gigs
+        console.log(" user doesn't own any gigs")
+        errorMessage = " user doesn't own any gigs"
+      }
+
+      
     } catch (error) {
       console.log(error)
       errorMessage = error.message;
@@ -277,4 +290,11 @@ function isStringProvided(str){
  */
 function isNumberProvided(num) {
     return typeof num === 'number' && num !== undefined && !isNaN(num);
+  }
+
+  function arrayRemove(arr, value) { 
+    
+    return arr.filter(function(ele){ 
+        return ele.toHexString() != value.toHexString(); 
+    });
   }
