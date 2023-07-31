@@ -1,8 +1,9 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
-
-
+const multer  = require('multer');
+const {GridFsStorage} = require('multer-gridfs-storage');
+const GridFSBucket = require("mongodb").GridFSBucket
 
 
 
@@ -21,7 +22,116 @@ const client = new MongoClient(uri, {
 
 
 
+const storage = new GridFsStorage({url:uri,
+  file: (req, file) => {
+    //If it is an image, save to photos bucket
+    if (file.mimetype === "image/jpeg" || file.mimetype === "image/webp") {
+      return {
+        bucketName: "photos",
+        filename: `${Date.now()}_${file.originalname}`,
+      }
+    } else {
+      //Otherwise save to default bucket
+      return `${Date.now()}_${file.originalname}`
+    }
+  }})
+
+const upload = multer({ storage });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = function (app){
+
+  app.post("/upload/image", upload.single("avatar"), (req, res) => {
+    const file = req.file
+    // Respond with the file details
+    res.send({
+      message: "Uploaded",
+      id: file.id,
+      name: file.filename,
+      contentType: file.contentType,
+    })
+  })
+
+  // app.get("/images", async (req, res) => {
+  //   try {
+  //     await client.connect()
+  
+  //     const database = client.db("test")
+  //     const images = database.collection("photos.files")
+  //     const cursor = images.find({})
+  //     const count = await cursor.count()
+  //     if (count === 0) {
+  //       return res.status(404).send({
+  //         message: "Error: No Images found",
+  //       })
+  //     }
+  
+  //     const allImages = []
+  
+  //     await cursor.forEach(item => {
+  //       allImages.push(item)
+  //     })
+  
+  //     res.send({ files: allImages })
+  //   } catch (error) {
+  //     console.log(error)
+  //     res.status(500).send({
+  //       message: "Error Something went wrong",
+  //       error,
+  //     })
+  //   }
+  // })
+
+  app.get("/image/:filename", async (req, res) => {
+    try {
+      await client.connect()
+  
+      const database = client.db("test")
+  
+      const imageBucket = new GridFSBucket(database, {
+        bucketName: "photos",
+      })
+  
+      let downloadStream = imageBucket.openDownloadStreamByName(
+        req.params.filename
+      )
+  
+      downloadStream.on("data", function (data) {
+        return res.status(200).write(data)
+      })
+  
+      downloadStream.on("error", function (data) {
+        return res.status(404).send({ error: "Image not found" })
+      })
+  
+      downloadStream.on("end", () => {
+        return res.end()
+      })
+    } catch (error) {
+      console.log(error)
+      res.status(500).send({
+        message: "Error Something went wrong",
+        error,
+      })
+    }
+  })
+
+
+
+
+
 
     /*   Note: user may be null if login fails 
       request:{
