@@ -72,3 +72,12 @@ GET http://localhost:3000/gigsLookUp/h HTTP/1.1 HTTP/1.1
 
 ###
 GET http://localhost:3000/jobsByFilter/Web designer/Seattle/Full Time/1000/10000 HTTP/1.1 HTTP/1.1
+
+###
+POST http://localhost:3000/modifyprofile HTTP/1.1
+content-type: application/json
+
+{
+        "_id":"64c811426b0ee3585219f253",
+        "lname":"Cruz"
+}
