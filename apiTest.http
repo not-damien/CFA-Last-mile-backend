@@ -96,3 +96,9 @@ content-type: application/json
         "email":"proffitlemon@gmail.email",
         "password":"P@ssw0rd123!"
 }
+
+
+###
+POST http://localhost:3000/upload/resume HTTP/1.1
+content-type: application/json
+
