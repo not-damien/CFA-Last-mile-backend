@@ -5,7 +5,7 @@ const multer  = require('multer');
 const {GridFsStorage} = require('multer-gridfs-storage');
 const GridFSBucket = require("mongodb").GridFSBucket
 
-
+const auth = require("../middleware/auth");
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
@@ -25,7 +25,7 @@ const client = new MongoClient(uri, {
 const storage = new GridFsStorage({url:uri,
   file: (req, file) => {
     //If it is an image, save to photos bucket
-    if (file.mimetype === "image/jpeg" || file.mimetype === "image/webp") {
+    if (file.mimetype === "image/jpeg" || file.mimetype === "image/webp"|| file.mimetype === "image/png") {
       return {
         bucketName: "photos",
         filename: `${Date.now()}_${file.originalname}`,
@@ -63,36 +63,6 @@ module.exports = function (app){
       contentType: file.contentType,
     })
   })
-
-  // app.get("/images", async (req, res) => {
-  //   try {
-  //     await client.connect()
-  
-  //     const database = client.db("test")
-  //     const images = database.collection("photos.files")
-  //     const cursor = images.find({})
-  //     const count = await cursor.count()
-  //     if (count === 0) {
-  //       return res.status(404).send({
-  //         message: "Error: No Images found",
-  //       })
-  //     }
-  
-  //     const allImages = []
-  
-  //     await cursor.forEach(item => {
-  //       allImages.push(item)
-  //     })
-  
-  //     res.send({ files: allImages })
-  //   } catch (error) {
-  //     console.log(error)
-  //     res.status(500).send({
-  //       message: "Error Something went wrong",
-  //       error,
-  //     })
-  //   }
-  // })
 
   app.get("/image/:filename", async (req, res) => {
     try {
@@ -199,6 +169,7 @@ module.exports = function (app){
       })
 
 
+
 /*  EXAMPLE BODY For register http
       request: {
         "fname":"Damien",
@@ -220,7 +191,8 @@ module.exports = function (app){
       }
       Note: user may be null if registration fails 
 */
-app.post('/register',async (req,res)=>{
+app.post('/register',upload.single("avatar"),async (req,res)=>{
+    const file = req.file
     const FNAME = req.body.fname//todo sanitize
     const LNAME = req.body.lname
     const EMAIL = req.body.email.toLowerCase();
@@ -233,13 +205,28 @@ app.post('/register',async (req,res)=>{
         res.status(400).send({
           message: "Password is not formated Properly"
         })} else{
-            let result = await sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,res)
-            res.status(200).send({
+            let result = await sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,file)
+            if(result.success){
+              res.status(200).send({
              message:"registration set",
              token: result.token
             })
+            }else{
+              res.status(500).send({
+                message: "registration failed"
+              })
+            }
+            
       }
   })
+app.post('/currentuser',auth,(req,res)=>{
+  res.status(200).send(req.body.user)
+})
+
+
+
+
+
   /*
 request:{
   email:"damien@example.com",
@@ -309,7 +296,7 @@ status 200
 }
 
 
-async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
+async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, FILE) {
     let ret = {success:false, token: null}      
     try{
           // store hash in the database
@@ -321,7 +308,7 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
               console.log("User Exists");
             }else{
               const hash = bcrypt.hashSync(PASSWORD, 10);
-              const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME });
+              const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME , pfp:FILE.filename});
               console.log(result);
               if (result.acknowledged) { //erorr here
                 console.log('Registration data saved successfully');
@@ -334,6 +321,7 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
                     expiresIn: "2h",
                   })
                   ret.token = token
+                  ret.success = true
               }else {
                 throw new Error('Failed to save registration data');
               }
