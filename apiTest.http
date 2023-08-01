@@ -20,17 +20,14 @@ content-type: application/json
 
 ###
 POST http://localhost:3000/creategig HTTP/1.1
-Content-Type: application/json
-
+content-type: application/json
 {
-  "jobname": "new gig",
-  "pay": 700,
-  "categories": "Design",
-  "description": "UX developer to help with a design for a website for my new restaurant",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjRjODBkMGZhODE5ZDJjNTkxYjBiMDU2IiwiaWF0IjoxNjkwODQ0NDk0LCJleHAiOjE2OTA4NTE2OTR9.n2TUWLfilpS8F_5XwEYSLgDrdneBzfp9GDaYXIzBPrI",
-  "timestamp": "2023-07-31T12:34:56.789Z"
-}
+        "jobname": "engineer Developer Needed",
+        "pay": 700,
+        "categories": "Design",
+        "description": "UX devolper to help with a design for a website for my new resturaunt"
 
+}
 
 ###
 POST http://localhost:3000/modifygig HTTP/1.1
@@ -60,12 +57,12 @@ DELETE http://localhost:3000/deletegig HTTP/1.1
 content-type: application/json
 
 {
-        "_id": "64c83eeaa821c73851266c95"
+        "_id": "64b5beab76be96fa8eedc71f"
 }
 
 ###
 
-GET http://localhost:3000/readgig/64c83eeaa821c73851266c95 HTTP/1.1 HTTP/1.1
+GET http://localhost:3000/readgig/64bade53cc9ad044a5253a0f HTTP/1.1 HTTP/1.1
 
 ###
 GET http://localhost:3000/usersByName/damien HTTP/1.1 HTTP/1.1
