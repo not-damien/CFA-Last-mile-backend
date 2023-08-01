@@ -8,7 +8,6 @@ app.use(express.json())
 app.use(cors())
 require('./routes/acounts')(app)
 require('./routes/gigs')(app)
-require('./routes/file')(app)
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
