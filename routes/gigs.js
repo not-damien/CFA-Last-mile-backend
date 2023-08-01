@@ -38,6 +38,7 @@ module.exports = function (app){
           message: "Missing required information"
         })
       }else{
+
         let result = await sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION, USER)
         console.log(result)
         if(result.success){
@@ -246,7 +247,8 @@ async function sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION, USER) {
         if (ExistingGig) {
           console.log("The Gig already exists")
         }else{
-          const GigResult = await collection.insertOne({jobname: JOBNAME, pay: PAY, categories: CATEGORIES, description: DESCRIPTION, email: USER.email});
+          const timestamp = new Date(); // Current timestamp
+          const GigResult = await collection.insertOne({jobname: JOBNAME, pay: PAY, categories: CATEGORIES, description: DESCRIPTION, email: USER.email, timestamp: timestamp});
           /*
             {
               acknowledged: true,
