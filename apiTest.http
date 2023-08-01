@@ -117,7 +117,7 @@ Content-Type: application/json
 x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjRjODExNDI2YjBlZTM1ODUyMTlmMjUzIiwiaWF0IjoxNjkwOTMwNDU4LCJleHAiOjE2OTA5Mzc2NTh9.li03gO3RPpg36mYwmrDggPoitk59wHu_CvpdLyCaUEU
 
 {
-  "fname": "John",
+  "fname": "Johnny",
   "lname": "Doe"
 }
 
@@ -126,13 +126,8 @@ POST http://localhost:3000/login HTTP/1.1
 content-type: application/json
 
 {
-<<<<<<< HEAD
         "email":"proffitlemon@gmail.email",
         "password":"P@ssw0rd123!"
-}
-=======
-        "_id":"64c811426b0ee3585219f253",
-        "lname":"Cruz"
 }
 
 
@@ -140,4 +135,3 @@ content-type: application/json
 POST http://localhost:3000/upload/resume HTTP/1.1
 content-type: application/json
 
->>>>>>> master
