@@ -1,12 +1,14 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
+const multer  = require('multer');
+const {GridFsStorage} = require('multer-gridfs-storage');
+const GridFSBucket = require("mongodb").GridFSBucket
+
 const auth = require("../middleware/auth");
 
-
-
-
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { error } = require('console');
 const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
@@ -21,7 +23,164 @@ const client = new MongoClient(uri, {
 
 
 
+const storage = new GridFsStorage({url:uri,
+  file: (req, file) => {
+    //If it is an image, save to photos bucket
+    if (file.mimetype === "image/jpeg" || file.mimetype === "image/webp"|| file.mimetype === "image/png") {
+      return {
+        bucketName: "photos",
+        filename: `${Date.now()}_${file.originalname}`,
+      }
+    } else {
+      //Otherwise save to default bucket
+      return `${Date.now()}_${file.originalname}`
+    }
+  }})
+
+const upload = multer({ storage });
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = function (app){
+
+  app.post("/upload/image", upload.single("avatar"), (req, res) => {
+    const file = req.file
+    // Respond with the file details
+    res.send({
+      message: "Uploaded",
+      id: file.id,
+      name: file.filename,
+      contentType: file.contentType,
+    })
+  })
+  
+  
+  //deletes the current user's pfp
+  app.delete("/pfp/del", auth, async(req,res)=>{
+    USER = req.body.user
+    ret = {
+      success: false,
+      message:""
+    }
+
+    //connect to db
+    //delete the current users photo
+    //update user account
+    //maybe point thier pfp field to a deafault image or set it to null
+    //send back infos
+
+    try{
+      await client.connect()
+  
+      const database = client.db("test")
+  
+      const imageBucket = new GridFSBucket(database, {
+        bucketName: "photos",
+      })
+      if(USER.pfp){
+        imageBucket.delete(new ObjectId(USER.pfp))
+        await client.db("upcycling").collection(process.env.dbCollectionName).findOneAndUpdate(USER,{$set:{pfp: null}});;
+        ret.success = true
+        ret.message = "file delted"
+      }else{
+        console.log("user has no photo")
+        ret.message = "user has no photo"
+      }
+
+    }catch(err){
+      console.log(err)
+      ret.message = err.message
+    }finally{ 
+      client.close()
+      if(ret.success){
+        res.status(200).send(ret)
+      }else{
+        res.status(500).send(ret)
+      }
+
+    }
+  })
+  //deletes any image
+  app.delete("/image/del", async(req,res)=>{
+    ret = {
+      success: false,
+      message:""
+    }
+    try{
+      await client.connect()
+  
+      const database = client.db("test")
+  
+      const imageBucket = new GridFSBucket(database, {
+        bucketName: "photos",
+      })
+      
+      await imageBucket.delete(new ObjectId(req.body.id))
+      ret.success = true
+      ret.message = "file delted"
+    }catch(err){
+      //console.log(err)
+      ret.message = err.message
+    }finally{
+      if(client){
+        client.close()
+      }
+      if(ret.success){
+        res.status(200).send(ret)
+      }else{
+        res.status(500).send(ret)
+      }
+    }
+  })
+
+  app.get("/image/:id", async (req, res) => {
+    try {
+      await client.connect()
+  
+      const database = client.db("test")
+  
+      const imageBucket = new GridFSBucket(database, {
+        bucketName: "photos",
+      })
+  
+      let downloadStream = imageBucket.openDownloadStream(
+        new ObjectId(req.params.id)
+      )
+  
+      downloadStream.on("data", function (data) {
+        return res.status(200).write(data)
+      })
+  
+      downloadStream.on("error", function (data) {
+        return res.status(404).send({ error: "Image not found" })
+      })
+  
+      downloadStream.on("end", () => {
+        return res.end()
+      })
+    } catch (error) {
+      console.log(error)
+      res.status(500).send({
+        message: "Error Something went wrong",
+        error,
+      })
+    }
+  })
+
+
+
+
+
 
     /*   Note: user may be null if login fails 
       request:{
@@ -89,6 +248,7 @@ module.exports = function (app){
       })
 
 
+
 /*  EXAMPLE BODY For register http
       request: {
         "fname":"Damien",
@@ -110,7 +270,8 @@ module.exports = function (app){
       }
       Note: user may be null if registration fails 
 */
-app.post('/register',async (req,res)=>{
+app.post('/register',upload.single("avatar"),async (req,res)=>{
+    const file = req.file
     const FNAME = req.body.fname//todo sanitize
     const LNAME = req.body.lname
     const EMAIL = req.body.email.toLowerCase();
@@ -123,13 +284,28 @@ app.post('/register',async (req,res)=>{
         res.status(400).send({
           message: "Password is not formated Properly"
         })} else{
-            let result = await sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,res)
-            res.status(200).send({
+            let result = await sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,file)
+            if(result.success){
+              res.status(200).send({
              message:"registration set",
              token: result.token
             })
+            }else{
+              res.status(500).send({
+                message: "registration failed"
+              })
+            }
+            
       }
   })
+app.post('/currentuser',auth,(req,res)=>{
+  res.status(200).send(req.body.user)
+})
+
+
+
+
+
   /*
 request:{
   email:"damien@example.com",
@@ -231,7 +407,7 @@ status 200
 
 
 
-async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
+async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, FILE) {
     let ret = {success:false, token: null}      
     try{
           // store hash in the database
@@ -243,7 +419,7 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
               console.log("User Exists");
             }else{
               const hash = bcrypt.hashSync(PASSWORD, 10);
-              const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME });
+              const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME , pfp:FILE.id});
               console.log(result);
               if (result.acknowledged) { //erorr here
                 console.log('Registration data saved successfully');
@@ -256,6 +432,7 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, res) {
                     expiresIn: "2h",
                   })
                   ret.token = token
+                  ret.success = true
               }else {
                 throw new Error('Failed to save registration data');
               }
