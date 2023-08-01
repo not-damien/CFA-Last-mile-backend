@@ -292,8 +292,39 @@ status 200
   })
   
   
-
+  //edit profile
+  //connect to db, find user(already signed in), replace changed info
+  app.post('/modifyprofile',async (req,res)=>{
+    //Take new info
+    const FNAME = req.body.fname//todo sanitize
+    const LNAME = req.body.lname
+    USERID = new ObjectId(req.body._id);
+    try {
+      await client.connect();
+      const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+      //get users old info and replace,
+      const updateUser = await collection.updateOne({_id: USERID}, {$set:{fname:FNAME, lname:LNAME}})
+      console.log(updateUser);
+      let success = true;
+    }
+    catch (error) {
+      console.log(error)
+      errorMessage = error.message;
+    }
+    finally{
+      if(client){
+        await client.close();
+      }
+    }
+    if(success){
+      res.status(200).send("User info has been updated");
+    }else{
+      res.status(500).send("Internal server error: " + errorMessage);
+    }
+  
+  })
 }
+
 
 
 async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, FILE) {
