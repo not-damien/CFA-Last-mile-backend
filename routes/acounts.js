@@ -1,11 +1,10 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
-const multer  = require('multer');
-const {GridFsStorage} = require('multer-gridfs-storage');
-const GridFSBucket = require("mongodb").GridFSBucket
 
-const auth = require("../middleware/auth");
+
+
+
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
@@ -294,19 +293,18 @@ status 200
   
   //edit profile
   //connect to db, find user(already signed in), replace changed info
-  app.post('/modifyprofile', auth, async (req,res)=>{
-    let success;
+  app.post('/modifyprofile',async (req,res)=>{
     //Take new info
     const FNAME = req.body.fname//todo sanitize
     const LNAME = req.body.lname
-    USERID = new ObjectId(req.body.user._id);
+    USERID = new ObjectId(req.body._id);
     try {
       await client.connect();
       const collection = client.db("upcycling").collection(process.env.dbCollectionName);
       //get users old info and replace,
       const updateUser = await collection.updateOne({_id: USERID}, {$set:{fname:FNAME, lname:LNAME}})
       console.log(updateUser);
-      success = true;
+      let success = true;
     }
     catch (error) {
       console.log(error)
