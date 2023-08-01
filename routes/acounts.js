@@ -8,6 +8,7 @@ const GridFSBucket = require("mongodb").GridFSBucket
 const auth = require("../middleware/auth");
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { error } = require('console');
 const uri = `mongodb+srv://${process.env.dbUserName}:${process.env.dbUserPassword}@${process.env.dbClusterName}.${process.env.dbMongoId}.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
@@ -50,7 +51,6 @@ const upload = multer({ storage });
 
 
 
-
 module.exports = function (app){
 
   app.post("/upload/image", upload.single("avatar"), (req, res) => {
@@ -63,8 +63,87 @@ module.exports = function (app){
       contentType: file.contentType,
     })
   })
+  
+  
+  //deletes the current user's pfp
+  app.delete("/pfp/del", auth, async(req,res)=>{
+    USER = req.body.user
+    ret = {
+      success: false,
+      message:""
+    }
 
-  app.get("/image/:filename", async (req, res) => {
+    //connect to db
+    //delete the current users photo
+    //update user account
+    //maybe point thier pfp field to a deafault image or set it to null
+    //send back infos
+
+    try{
+      await client.connect()
+  
+      const database = client.db("test")
+  
+      const imageBucket = new GridFSBucket(database, {
+        bucketName: "photos",
+      })
+      if(USER.pfp){
+        imageBucket.delete(new ObjectId(USER.pfp))
+        await client.db("upcycling").collection(process.env.dbCollectionName).findOneAndUpdate(USER,{$set:{pfp: null}});;
+        ret.success = true
+        ret.message = "file delted"
+      }else{
+        console.log("user has no photo")
+        ret.message = "user has no photo"
+      }
+
+    }catch(err){
+      console.log(err)
+      ret.message = err.message
+    }finally{ 
+      client.close()
+      if(ret.success){
+        res.status(200).send(ret)
+      }else{
+        res.status(500).send(ret)
+      }
+
+    }
+  })
+  //deletes any image
+  app.delete("/image/del", async(req,res)=>{
+    ret = {
+      success: false,
+      message:""
+    }
+    try{
+      await client.connect()
+  
+      const database = client.db("test")
+  
+      const imageBucket = new GridFSBucket(database, {
+        bucketName: "photos",
+      })
+      
+      await imageBucket.delete(new ObjectId(req.body.id))
+      ret.success = true
+      ret.message = "file delted"
+    }catch(err){
+      //console.log(err)
+      ret.message = err.message
+    }finally{
+      if(client){
+        client.close()
+      }
+      if(ret.success){
+        res.status(200).send(ret)
+      }else{
+        res.status(500).send(ret)
+      }
+    }
+  })
+
+  app.get("/image/:id", async (req, res) => {
     try {
       await client.connect()
   
@@ -74,8 +153,8 @@ module.exports = function (app){
         bucketName: "photos",
       })
   
-      let downloadStream = imageBucket.openDownloadStreamByName(
-        req.params.filename
+      let downloadStream = imageBucket.openDownloadStream(
+        new ObjectId(req.params.id)
       )
   
       downloadStream.on("data", function (data) {
@@ -339,7 +418,7 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, FILE) {
               console.log("User Exists");
             }else{
               const hash = bcrypt.hashSync(PASSWORD, 10);
-              const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME , pfp:FILE.filename});
+              const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME , pfp:FILE.id});
               console.log(result);
               if (result.acknowledged) { //erorr here
                 console.log('Registration data saved successfully');
