@@ -1,7 +1,7 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
-
+const auth = require("../middleware/auth");
 
 
 
@@ -197,18 +197,19 @@ status 200
   
   //edit profile
   //connect to db, find user(already signed in), replace changed info
-  app.post('/modifyprofile',async (req,res)=>{
+  app.post('/modifyprofile', auth, async (req,res)=>{
+    let success;
     //Take new info
     const FNAME = req.body.fname//todo sanitize
     const LNAME = req.body.lname
-    USERID = new ObjectId(req.body._id);
+    USERID = new ObjectId(req.body.user._id);
     try {
       await client.connect();
       const collection = client.db("upcycling").collection(process.env.dbCollectionName);
       //get users old info and replace,
       const updateUser = await collection.updateOne({_id: USERID}, {$set:{fname:FNAME, lname:LNAME}})
       console.log(updateUser);
-      let success = true;
+      success = true;
     }
     catch (error) {
       console.log(error)
