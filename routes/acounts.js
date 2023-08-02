@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const multer  = require('multer');
 const {GridFsStorage} = require('multer-gridfs-storage');
 const GridFSBucket = require("mongodb").GridFSBucket
-
+const sendEmail = require("../middleware/email")
 const auth = require("../middleware/auth");
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -239,6 +239,7 @@ module.exports = function (app){
       }
 */
     app.post('/login',async (req,res)=>{
+       
         console.log(req.body)
           const EMAIL = req.body.email.toLowerCase();    //todo sanitize 
           const PASSWORD = req.body.password
@@ -258,7 +259,8 @@ module.exports = function (app){
               if(!user){
                 res.status(400).send({message: "Email or password does not match"})
               }else if(bcrypt.compareSync(PASSWORD, user.password)){
-                //login
+                //login 
+                sendEmail(EMAIL,"New Login On Your ConnectIT Account");
                 console.log(user.fname + ' Logged in')
                 const token = jwt.sign(
                   { user_id: user._id, },
