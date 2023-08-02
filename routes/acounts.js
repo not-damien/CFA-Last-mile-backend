@@ -279,10 +279,14 @@ module.exports = function (app){
       Note: user may be null if registration fails 
 */
 app.post('/register',upload.fields([{name:"avatar"},{name:"resume"}]),async (req,res)=>{
-    
-    const file = req.files.avatar[0]
-    const RESUME = req.files.resume[0]
-
+  let file;
+  let RESUME  
+  
+  
+  if(req.files){
+      file = req.files.avatar[0]
+      RESUME = req.files.resume[0]
+    }
 
     console.log(RESUME)
     console.log(file)
@@ -434,7 +438,12 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, FILE, RESUME)
               console.log("User Exists");
             }else{
               const hash = bcrypt.hashSync(PASSWORD, 10);
-              const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME , pfp:FILE.id, resume:RESUME.id });
+              let result
+              if(FILE && RESUME){
+                result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME , pfp:FILE.id, resume:RESUME.id });
+              }else{
+                result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME, pfp:null, resume: null});
+              }
               console.log(result);
               if (result.acknowledged) { //erorr here
                 console.log('Registration data saved successfully');
