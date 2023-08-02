@@ -5,6 +5,8 @@ const multer  = require('multer');
 const {GridFsStorage} = require('multer-gridfs-storage');
 const GridFSBucket = require("mongodb").GridFSBucket
 
+
+
 const auth = require("../middleware/auth");
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -31,7 +33,13 @@ const storage = new GridFsStorage({url:uri,
         bucketName: "photos",
         filename: `${Date.now()}_${file.originalname}`,
       }
-    } else {
+    }
+    else if(file.mimetype === "application/pdf"){
+        return {
+          bucketName: "resumes",
+          filename: `${Date.now()}_${file.originalname}`,
+        }
+  } else {
       //Otherwise save to default bucket
       return `${Date.now()}_${file.originalname}`
     }
@@ -76,7 +84,7 @@ module.exports = function (app){
     //connect to db
     //delete the current users photo
     //update user account
-    //maybe point thier pfp field to a deafault image or set it to null
+    //maybe point thier pfp field to a default image or set it to null
     //send back infos
 
     try{
@@ -270,8 +278,15 @@ module.exports = function (app){
       }
       Note: user may be null if registration fails 
 */
-app.post('/register',upload.single("avatar"),async (req,res)=>{
-    const file = req.file
+app.post('/register',upload.fields([{name:"avatar"},{name:"resume"}]),async (req,res)=>{
+    
+    const file = req.files.avatar[0]
+    const RESUME = req.files.resume[0]
+
+
+    console.log(RESUME)
+    console.log(file)
+
     const FNAME = req.body.fname//todo sanitize
     const LNAME = req.body.lname
     const EMAIL = req.body.email.toLowerCase();
@@ -284,7 +299,7 @@ app.post('/register',upload.single("avatar"),async (req,res)=>{
         res.status(400).send({
           message: "Password is not formated Properly"
         })} else{
-            let result = await sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,file)
+            let result = await sendRegistrationToDb(EMAIL,PASSWORD,FNAME,LNAME,file,RESUME)
             if(result.success){
               res.status(200).send({
              message:"registration set",
@@ -407,7 +422,7 @@ status 200
 
 
 
-async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, FILE) {
+async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, FILE, RESUME) {
     let ret = {success:false, token: null}      
     try{
           // store hash in the database
@@ -419,7 +434,7 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, FILE) {
               console.log("User Exists");
             }else{
               const hash = bcrypt.hashSync(PASSWORD, 10);
-              const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME , pfp:FILE.id});
+              const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME , pfp:FILE.id, resume:RESUME.id });
               console.log(result);
               if (result.acknowledged) { //erorr here
                 console.log('Registration data saved successfully');
