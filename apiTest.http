@@ -97,6 +97,13 @@ content-type: application/json
 }
 
 ###
+DELETE http://localhost:3000/resume/64cac2cfc647bb5dbb7949b0 HTTP/1.1
+
+###
+GET http://localhost:3000/resume/del HTTP/1.1 HTTP/1.1
+
+
+###
 
 GET http://localhost:3000/readgig/64c83eeaa821c73851266c95 HTTP/1.1 HTTP/1.1
 
