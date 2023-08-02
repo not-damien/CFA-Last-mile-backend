@@ -418,7 +418,13 @@ async function sendRegistrationToDb(EMAIL, PASSWORD, FNAME, LNAME, FILE) {
               console.log("User Exists");
             }else{
               const hash = bcrypt.hashSync(PASSWORD, 10);
-              const result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME , pfp:FILE.id});
+              let result
+              if(FILE != undefined){
+                result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME , pfp:FILE.id});
+              }else{
+                result = await collection.insertOne({ email: EMAIL, password: hash, fname: FNAME, lname: LNAME , pfp:null});
+              }
+              
               console.log(result);
               if (result.acknowledged) { //erorr here
                 console.log('Registration data saved successfully');
