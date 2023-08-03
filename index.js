@@ -174,7 +174,7 @@ app.get('/gigsLookUp/:gigsSearch', async function(req, res){
   try {
 
     const gigsSearch = req.params.gigsSearch;
-    const query = { categories: { $regex: new RegExp(gigsSearch, 'i') } };
+    const query = { jobname: { $regex: new RegExp(gigsSearch, 'i') } };
     const projection = {_id: 0,fname:0, lname:0, email:0, password:0};
     
     await client.connect();
