@@ -29,9 +29,12 @@ module.exports = function (app){
     */
     app.post('/creategig', auth, async (req,res)=>{
         JOBNAME = req.body.jobname;
-        PAY = req.body.pay;
         CATEGORIES = req.body.categories;
+        REMOTE = req.body.remote;
+        DURATION = req.body.duration;
+        PAY = req.body.pay;
         DESCRIPTION = req.body.description;
+        EMPLOYER = req.body.employer;
         USER = req.body.user;
       if(!isStringProvided(JOBNAME) || !isStringProvided(CATEGORIES) || !isStringProvided(DESCRIPTION) || !isNumberProvided(PAY)){
         res.status(400).send({
@@ -39,7 +42,7 @@ module.exports = function (app){
         })
       }else{
 
-        let result = await sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION, USER)
+        let result = await sendGigToDatabase(JOBNAME, CATEGORIES, REMOTE, DURATION,PAY,DESCRIPTION, EMPLOYER, USER)
         console.log(result)
         if(result.success){
           res.status(200).send({
@@ -126,9 +129,12 @@ example bodyy
 app.post('/modifygig',auth ,async(req,res)=>{  
     GIGID = new ObjectId(req.body._id);
     JOBNAME = req.body.jobname;
-    PAY = req.body.pay;
     CATEGORIES = req.body.categories;
+    REMOTE = req.body.remote;
+    DURATION = req.body.duration;
+    PAY = req.body.pay;
     DESCRIPTION = req.body.description;
+    EMPLOYER = req.body.employer;
     USER = req.body.user;
     GIGLIST = USER.gigs;
   
@@ -142,7 +148,7 @@ app.post('/modifygig',auth ,async(req,res)=>{
         console.log(GIGLIST)
         console.log(GIGID)
         if(GIGLIST.find(element => element.toHexString() == GIGID.toHexString())){
-          const updateGig = await collection.updateOne({_id: GIGID}, {$set:{jobname:JOBNAME, pay:PAY, categories:CATEGORIES, description:DESCRIPTION}})
+          const updateGig = await collection.updateOne({_id: GIGID}, {$set:{jobname: JOBNAME, categories: CATEGORIES, remote: REMOTE, duration:DURATION, pay: PAY, description: DESCRIPTION, employer: EMPLOYER}})
           console.log(updateGig);
           success = true;
         }
@@ -238,7 +244,7 @@ app.delete('/deletegig',auth,async(req,res)=>{
 /**
  * Sending gig to the database, if checks if the gig already exists. 
  */
-async function sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION, USER) {
+async function sendGigToDatabase(JOBNAME, CATEGORIES, REMOTE, DURATION, PAY, DESCRIPTION, EMPLOYER, USER) {
     let result = {success: false};
       try {
         await client.connect();
@@ -248,7 +254,7 @@ async function sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION, USER) {
           console.log("The Gig already exists")
         }else{
           const timestamp = new Date(); // Current timestamp
-          const GigResult = await collection.insertOne({jobname: JOBNAME, pay: PAY, categories: CATEGORIES, description: DESCRIPTION, email: USER.email, timestamp: timestamp});
+          const GigResult = await collection.insertOne({jobname: JOBNAME, categories: CATEGORIES,remote: REMOTE, duration:DURATION, pay: PAY, description: DESCRIPTION, employer: EMPLOYER, email: USER.email, timestamp: timestamp});
           /*
             {
               acknowledged: true,
@@ -276,6 +282,7 @@ async function sendGigToDatabase(JOBNAME, PAY, CATEGORIES, DESCRIPTION, USER) {
         return result;
       }
     }
+  
 
 //helper functions
 /**
