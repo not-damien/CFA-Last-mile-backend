@@ -168,7 +168,7 @@ or
   message: "it failed and heres why"
 }
 */
-app.get('/gigsLookUp/:gigsSearch', async function(req, res){
+app.get('/jobslisting/:gigsSearch', async function(req, res){
   let success = false;
   let errorMessage;
   let gigsResults;
