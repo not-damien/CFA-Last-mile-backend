@@ -56,12 +56,13 @@ POST http://localhost:3000/creategig HTTP/1.1
 Content-Type: application/json
 
 {
-  "jobname": "new gig",
-  "pay": 700,
-  "categories": "Design",
-  "description": "UX developer to help with a design for a website for my new restaurant",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjRjODBkMGZhODE5ZDJjNTkxYjBiMDU2IiwiaWF0IjoxNjkwODQ0NDk0LCJleHAiOjE2OTA4NTE2OTR9.n2TUWLfilpS8F_5XwEYSLgDrdneBzfp9GDaYXIzBPrI",
-  "timestamp": "2023-07-31T12:34:56.789Z"
+  "jobname": "Cyber security",
+  "categories": "Security",
+  "remote": "Remote",
+  "duration": "12 months",
+  "pay": 20000,
+  "description": "This job require 2 years of experience in cyber security with strong skills to details etc",
+  
 }
 
 
@@ -70,11 +71,12 @@ POST http://localhost:3000/modifygig HTTP/1.1
 content-type: application/json
 
 {
-        "_id": "64bade53cc9ad044a5253a0f",
+        "_id": "64cd7911574ba95122a20f79",
         "jobname": "Engineer Developer Needed",
         "pay": 700,
         "categories": "Design",
-        "description": "UX devolper to help with a design for a website for my new resturaunt"
+        "description": "UX devolper to help with a design for a website for my new resturaunt",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjRjZDc1OWUyZDNmNDRiMmFmZWQ4MTUwIiwiaWF0IjoxNjkxMTg2NTkwLCJleHAiOjE2OTExOTM3OTB9.y5zM_1pVIqGuOdCNUSnLQRyrLL14HNCOnCGf1vB3f9o"
 }
 
 ###
@@ -111,7 +113,7 @@ GET http://localhost:3000/readgig/64c83eeaa821c73851266c95 HTTP/1.1 HTTP/1.1
 GET http://localhost:3000/usersByName/damien HTTP/1.1 HTTP/1.1
 
 ###
-GET http://localhost:3000/gigsLookUp/h HTTP/1.1 HTTP/1.1
+GET http://localhost:3000/gigsLookUp/design HTTP/1.1 HTTP/1.1
 
 ###
 GET http://localhost:3000/jobsByFilter/Web designer/Seattle/Full Time/1000/10000 HTTP/1.1 HTTP/1.1

@@ -7,6 +7,7 @@ const GridFSBucket = require("mongodb").GridFSBucket
 
 
 
+const sendEmail = require("../middleware/email")
 const auth = require("../middleware/auth");
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -72,7 +73,46 @@ module.exports = function (app){
     })
   })
   
+  app.post('/changepfp', upload.single("avatar"),auth,async (req,res)=>{
+    //delete current user's pfp
+    //attach the new photo
+    USER = req.body.user
+    console.log(USER)
+    const file = req.file
+    ret = {
+      success: false,
+      message:""
+    }
+    try{
+      await client.connect()
   
+      const database = client.db("test")
+  
+      const imageBucket = new GridFSBucket(database, {
+        bucketName: "photos",
+      })
+      if(USER.pfp){
+        imageBucket.delete(new ObjectId(USER.pfp))
+      }
+      if(file){
+        await client.db("upcycling").collection(process.env.dbCollectionName).findOneAndUpdate(USER,{$set:{pfp: file.id}});;
+        ret.success = true
+        ret.message = "file swapped"
+      }
+
+    }catch(err){
+      console.log(err)
+      ret.message = err.message
+    }finally{ 
+      client.close()
+      if(ret.success){
+        res.status(200).send(ret)
+      }else{
+        res.status(500).send(ret)
+      }
+
+    }
+  })
   //deletes the current user's pfp
   app.delete("/pfp/del", auth, async(req,res)=>{
     USER = req.body.user
@@ -208,6 +248,7 @@ module.exports = function (app){
       }
 */
     app.post('/login',async (req,res)=>{
+       
         console.log(req.body)
           const EMAIL = req.body.email.toLowerCase();    //todo sanitize 
           const PASSWORD = req.body.password
@@ -227,7 +268,8 @@ module.exports = function (app){
               if(!user){
                 res.status(400).send({message: "Email or password does not match"})
               }else if(bcrypt.compareSync(PASSWORD, user.password)){
-                //login
+                //login 
+                sendEmail(EMAIL,"New Login On Your ConnectIT Account");
                 console.log(user.fname + ' Logged in')
                 const token = jwt.sign(
                   { user_id: user._id, },

@@ -114,10 +114,11 @@ app.get('/usersByName/:username', async function(req, res){
     const userSearch = req.params.username;
     const query = { $or: [
       {fname: {$regex: new RegExp(userSearch, 'i')}},
-      {lname: {$regex: new RegExp(userSearch, 'i')}}
+      {lname: {$regex: new RegExp(userSearch, 'i')}},
+      {email: {$regex: new RegExp(userSearch, 'i')}}
     ]};
 
-    const projection = {_id: 0,email:0, password:0, gigs: 0 };
+    const projection = {_id: 0, password:0, gigs: 0 };
     
     await client.connect();
     const collection = client.db("upcycling").collection(process.env.dbCollectionName);
@@ -174,8 +175,8 @@ app.get('/gigsLookUp/:gigsSearch', async function(req, res){
   try {
 
     const gigsSearch = req.params.gigsSearch;
-    const query = { jobname: { $regex: new RegExp(gigsSearch, 'i') } };
-    const projection = {_id: 0,fname:0, lname:0, email:0, password:0};
+    const query = { categories: { $regex: new RegExp(gigsSearch, 'i') } };
+    const projection = {fname:0, lname:0, email:0, password:0};
     
     await client.connect();
     const collection = client.db("upcycling").collection(process.env.dbCollectionName);
