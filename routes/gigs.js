@@ -89,8 +89,8 @@ or
 }
 */
 
-app.get('/gigbyid',async (req,res)=>{
-    GIGID = new ObjectId(req.body._id);
+app.get('/gigbyid/:gigId',async (req,res)=>{
+    GIGID = new ObjectId(req.params.gigId);
     let gig = {}
     let success = false;
     let errorMessage;

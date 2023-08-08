@@ -28,6 +28,9 @@ const verifyToken = async (req, res, next) => {
     console.log(req.body.user)
   } catch (err) { 
     console.log(err)
+    if (err.name === 'MongoServerClosedError') {
+      return res.status(500).send("Database server is currently unavailable. Please try again later.");
+    }
     return res.status(401).send(err);
   }finally{
     if (client) {
