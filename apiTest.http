@@ -38,7 +38,7 @@ content-type: application/json
 {
         "fname":"Damien",
         "lname":"Cruz",
-        "email":"Damien@bal.email",
+        "email":"dam@bal.email",
         "password":"P@ssw0rd123!"
 }
 
@@ -113,7 +113,7 @@ GET http://localhost:3000/readgig/64c83eeaa821c73851266c95 HTTP/1.1 HTTP/1.1
 GET http://localhost:3000/usersByName/damien HTTP/1.1 HTTP/1.1
 
 ###
-GET http://localhost:3000/gigsLookUp/design HTTP/1.1 HTTP/1.1
+GET http://localhost:3000/jobsListing/design HTTP/1.1 HTTP/1.1
 
 ###
 GET http://localhost:3000/jobsByFilter/Web designer/Seattle/Full Time/1000/10000 HTTP/1.1 HTTP/1.1

@@ -113,6 +113,7 @@ module.exports = function (app){
 
     }
   })
+
   //deletes the current user's pfp
   app.delete("/pfp/del", auth, async(req,res)=>{
     USER = req.body.user
@@ -320,6 +321,49 @@ module.exports = function (app){
       }
       Note: user may be null if registration fails 
 */
+
+//upload user resume if it doesn't exist
+app.post('/changeResume', upload.single("resume"),auth,async (req,res)=>{
+  //delete current user's resume
+  //attach the new resume
+  USER = req.body.user
+  console.log(USER)
+  const file = req.file
+  ret = {
+    success: false,
+    message:""
+  }
+  try{
+    await client.connect()
+
+    const database = client.db("test")
+
+    const resumeBucket = new GridFSBucket(database, {
+      bucketName: "resumes",
+    })
+    if(USER.resume){
+      resumeBucket.delete(new ObjectId(USER.resume))
+    }
+    if(file){
+      await client.db("upcycling").collection(process.env.dbCollectionName).findOneAndUpdate(USER,{$set:{resume: file.id}});;
+      ret.success = true
+      ret.message = "file swapped"
+    }
+  
+  }catch(err){
+    console.log(err)
+    ret.message = err.message
+  }finally{ 
+    client.close()
+    if(ret.success){
+      res.status(200).send(ret)
+    }else{
+      res.status(500).send(ret)
+    }
+
+  }
+})
+
 app.post('/register',upload.fields([{name:"avatar"},{name:"resume"}]),async (req,res)=>{
   let file;
   let RESUME  
