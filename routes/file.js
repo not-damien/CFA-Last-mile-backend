@@ -125,6 +125,7 @@ const storage = new GridFsStorage({url:uri,
     })
     
     app.get("/resume/:id", async (req, res) => {
+      console.log(req.params.id)
       try {
         await client.connect()
     
@@ -134,8 +135,8 @@ const storage = new GridFsStorage({url:uri,
           bucketName: "resumes",
         })
     
-        let downloadStream = resumeBucket.openDownloadStreamByName(
-          req.params.filename
+        let downloadStream = resumeBucket.openDownloadStream(
+          new ObjectId(req.params.id)
         )
     
         downloadStream.on("data", function (data) {
@@ -143,6 +144,7 @@ const storage = new GridFsStorage({url:uri,
         })
     
         downloadStream.on("error", function (data) {
+          console.log(data)
           return res.status(404).send({ error: "resume not found" })
         })
     
