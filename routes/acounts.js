@@ -439,12 +439,14 @@ status 200
     //Take new info
     const FNAME = req.body.fname//todo sanitize
     const LNAME = req.body.lname
+    const ABOUT = req.body.about
+    console.log(ABOUT);
     USERID = new ObjectId(req.body.user._id);
     try {
       await client.connect();
       const collection = client.db("upcycling").collection(process.env.dbCollectionName);
       //get users old info and replace,
-      const updateUser = await collection.updateOne({_id: USERID}, {$set:{fname:FNAME, lname:LNAME}})
+      const updateUser = await collection.updateOne({_id: USERID}, {$set:{fname:FNAME, lname:LNAME,  about:ABOUT}})
       console.log(updateUser);
       success = true;
     }
