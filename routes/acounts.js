@@ -297,6 +297,25 @@ module.exports = function (app){
             }      
           }
       })
+    app.get('/userbyid/:id',async (req,res)=>{
+     
+      try{ 
+        const USERID = new ObjectId(req.params.id)
+        await client.connect();
+        const collection = client.db("upcycling").collection(process.env.dbCollectionName);
+        //get information about user from database
+        let user = await collection.findOne({_id:USERID});
+        console.log(user)
+        res.status(200).send(user)
+      }catch(erorr){
+        console.log(erorr)
+        res.status(404).send({message:"user not found"})
+      }finally{
+        if (client) {
+          await client.close();
+        }
+        }
+    })
 
 
 
