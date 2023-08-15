@@ -503,13 +503,14 @@ status 200
     const FNAME = req.body.fname//todo sanitize
     const LNAME = req.body.lname
     const ABOUT = req.body.about
+    const GITHUB = req.body.github
     console.log(ABOUT);
     USERID = new ObjectId(req.body.user._id);
     try {
       await client.connect();
       const collection = client.db("upcycling").collection(process.env.dbCollectionName);
       //get users old info and replace,
-      const updateUser = await collection.updateOne({_id: USERID}, {$set:{fname:FNAME, lname:LNAME,  about:ABOUT}})
+      const updateUser = await collection.updateOne({_id: USERID}, {$set:{fname:FNAME, lname:LNAME,  about:ABOUT, github:GITHUB}})
       console.log(updateUser);
       success = true;
     }
