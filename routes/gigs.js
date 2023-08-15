@@ -90,11 +90,12 @@ or
 */
 
 app.get('/gigbyid/:gigId',async (req,res)=>{
-    GIGID = new ObjectId(req.params.gigId);
+    
     let gig = {}
     let success = false;
     let errorMessage;
     try {
+      GIGID = new ObjectId(req.params.gigId);
       await client.connect();
       const collection = client.db("upcycling").collection(process.env.dbCollectionName);
       
